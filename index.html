@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b4f9c" />
+  <meta name="description" content="Sistema de gestão de empréstimos da Biblioteca da EE 11 de Outubro" />
+  <title>Biblioteca • EE 11 de Outubro</title>
+  <link rel="icon" type="image/png" href="/assets/logo-escola.png" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <img src="/assets/logo-escola.png" alt="Logo da EE 11 de Outubro" class="brand-logo" />
+        <div>
+          <p class="eyebrow">EE 11 DE OUTUBRO</p>
+          <h1>Biblioteca Escolar</h1>
+          <p class="subtitle">Empréstimos, acervo e acompanhamento</p>
+        </div>
+      </div>
+      <button class="icon-btn" type="button" aria-label="Abrir menu" id="menuButton">☰</button>
+    </header>
+
+    <main>
+      <section class="hero-card">
+        <div>
+          <span class="pill">Painel administrativo</span>
+          <h2>Visão geral da biblioteca</h2>
+          <p>Dados demonstrativos nesta primeira etapa. Na próxima, eles serão carregados do Supabase.</p>
+        </div>
+        <div class="hero-actions">
+          <button class="primary-btn" type="button" data-action="emprestimo">+ Novo empréstimo</button>
+          <button class="secondary-btn" type="button" data-action="devolucao">Registrar devolução</button>
+        </div>
+      </section>
+
+      <section class="metrics-grid" aria-label="Indicadores da biblioteca">
+        <article class="metric-card">
+          <span class="metric-icon">📚</span>
+          <span class="metric-label">Títulos</span>
+          <strong>—</strong>
+          <small>cadastrados</small>
+        </article>
+        <article class="metric-card">
+          <span class="metric-icon">📖</span>
+          <span class="metric-label">Exemplares</span>
+          <strong>—</strong>
+          <small>acervo físico</small>
+        </article>
+        <article class="metric-card">
+          <span class="metric-icon">🟢</span>
+          <span class="metric-label">Disponíveis</span>
+          <strong>—</strong>
+          <small>para empréstimo</small>
+        </article>
+        <article class="metric-card">
+          <span class="metric-icon">🔵</span>
+          <span class="metric-label">Emprestados</span>
+          <strong>—</strong>
+          <small>neste momento</small>
+        </article>
+        <article class="metric-card highlight">
+          <span class="metric-icon">📅</span>
+          <span class="metric-label">Empréstimos hoje</span>
+          <strong>—</strong>
+          <small>movimentação diária</small>
+        </article>
+        <article class="metric-card highlight">
+          <span class="metric-icon">📊</span>
+          <span class="metric-label">Empréstimos no mês</span>
+          <strong>—</strong>
+          <small>movimentação mensal</small>
+        </article>
+        <article class="metric-card warning">
+          <span class="metric-icon">⏰</span>
+          <span class="metric-label">Devolver hoje</span>
+          <strong>—</strong>
+          <small>previsões para hoje</small>
+        </article>
+        <article class="metric-card danger">
+          <span class="metric-icon">⚠️</span>
+          <span class="metric-label">Em atraso</span>
+          <strong>—</strong>
+          <small>precisam de cobrança</small>
+        </article>
+      </section>
+
+      <section class="content-grid">
+        <article class="panel attention-panel">
+          <div class="panel-heading">
+            <div>
+              <span class="section-kicker">ATENÇÃO HOJE</span>
+              <h3>Pendências e devoluções</h3>
+            </div>
+            <button class="text-btn" type="button">Ver todas</button>
+          </div>
+          <div class="empty-state">
+            <div class="empty-icon">✓</div>
+            <p>Os alertas aparecerão aqui quando o banco estiver conectado.</p>
+          </div>
+        </article>
+
+        <article class="panel quick-panel">
+          <div class="panel-heading">
+            <div>
+              <span class="section-kicker">ACESSO RÁPIDO</span>
+              <h3>Operações</h3>
+            </div>
+          </div>
+          <div class="quick-grid">
+            <button type="button" class="quick-action"><span>📚</span><b>Catálogo</b><small>Consultar acervo</small></button>
+            <button type="button" class="quick-action"><span>👥</span><b>Alunos</b><small>Turmas e histórico</small></button>
+            <button type="button" class="quick-action"><span>📢</span><b>Cobranças</b><small>Livros em atraso</small></button>
+            <button type="button" class="quick-action"><span>📄</span><b>Relatórios</b><small>PDF e Excel</small></button>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel status-panel">
+        <div class="panel-heading">
+          <div>
+            <span class="section-kicker">SISTEMA</span>
+            <h3>Status da implantação</h3>
+          </div>
+          <span class="status-badge" id="apiStatus">Verificando…</span>
+        </div>
+        <div class="steps">
+          <div class="step done"><span>1</span><div><b>Base do APP</b><small>Interface e estrutura online</small></div></div>
+          <div class="step current"><span>2</span><div><b>Supabase</b><small>Banco, autenticação e Storage</small></div></div>
+          <div class="step"><span>3</span><div><b>Chamada Escolar</b><small>Sincronização de alunos e turmas</small></div></div>
+          <div class="step"><span>4</span><div><b>Drive</b><small>Relatórios institucionais</small></div></div>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Navegação principal">
+      <button class="nav-item active" type="button"><span>⌂</span><small>Início</small></button>
+      <button class="nav-item" type="button"><span>📚</span><small>Catálogo</small></button>
+      <button class="nav-item main-action" type="button"><span>＋</span><small>Empréstimo</small></button>
+      <button class="nav-item" type="button"><span>↩</span><small>Devolução</small></button>
+      <button class="nav-item" type="button"><span>⚙</span><small>Admin</small></button>
+    </nav>
+  </div>
+
+  <div class="toast" role="status" aria-live="polite" id="toast"></div>
+  <script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+# Biblioteca EE 11 de Outubro
+
+MVP online para gestão da biblioteca escolar da EE 11 de Outubro.
+
+## Situação do desenvolvimento
+
+- Etapa 1 — base visual e estrutura para Vercel: concluída
+- Etapa 2 — Supabase (banco, autenticação e Storage): próxima etapa
+- Etapa 3 — integração com alunos e turmas do Chamada Escolar
+- Etapa 4 — catálogo, títulos e exemplares
+- Etapa 5 — empréstimos, devoluções e renovações
+- Etapa 6 — painel, cobranças e relatórios
+- Etapa 7 — Google Drive e notificações
+
+QR Code e código de barras ficam apenas preparados para uma evolução posterior ao MVP.
+
+## Arquitetura definida
+
+- GitHub: versionamento
+- Vercel: hospedagem e APIs
+- Supabase: banco, autenticação e Storage
+- Chamada Escolar: origem de alunos e turmas
+- Google Drive: relatórios institucionais
+
+## Publicação no GitHub
+
+1. Crie um repositório vazio chamado `biblioteca-ee11` no GitHub.
+2. Envie todo o conteúdo desta pasta para a branch `main`.
+3. Não envie arquivos `.env`; eles já estão protegidos pelo `.gitignore`.
+
+## Publicação na Vercel
+
+1. Na Vercel, selecione **Add New → Project**.
+2. Importe o repositório `biblioteca-ee11` do GitHub.
+3. Mantenha **Framework Preset** como `Other` e o diretório raiz como `./`.
+4. Publique sem comando de build. A Vercel servirá o `index.html` e a função `/api/health`.
+
+Nesta etapa ainda não existem variáveis de ambiente. Elas serão incluídas somente na Etapa 2, quando o Supabase for conectado.
+
+## Verificação local
+
+Requer Node.js 20 ou superior.
+
+```bash
+npm run check
+```
+
+O comando valida os arquivos obrigatórios, o `vercel.json` e as referências essenciais da página inicial.

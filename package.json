@@ -1,0 +1,13 @@
+{
+  "name": "biblioteca-ee11",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Sistema de gestão de empréstimos da Biblioteca da EE 11 de Outubro",
+  "scripts": {
+    "check": "node scripts/check-project.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
