@@ -4,15 +4,22 @@ MVP online para gestão da biblioteca escolar da EE 11 de Outubro.
 
 ## Situação do desenvolvimento
 
-- Etapa 1 — base visual e estrutura para Vercel: concluída
+- Etapa 1 — identidade visual, painel responsivo e estrutura para Vercel: concluída
 - Etapa 2 — Supabase (banco, autenticação e Storage): próxima etapa
 - Etapa 3 — integração com alunos e turmas do Chamada Escolar
-- Etapa 4 — catálogo, títulos e exemplares
+- Etapa 4 — acervo e controle interno de exemplares
 - Etapa 5 — empréstimos, devoluções e renovações
 - Etapa 6 — painel, cobranças e relatórios
 - Etapa 7 — Google Drive e notificações
 
 QR Code e código de barras ficam apenas preparados para uma evolução posterior ao MVP.
+
+## Comportamento de navegação
+
+- A primeira visualização sempre começa no topo da página.
+- A seção atual e os campos marcados para persistência são preservados localmente.
+- Ao trocar de seção ou iniciar uma atividade, a tela rola automaticamente para o início do conteúdo.
+- O estado da atividade só é limpo quando ela for finalizada, cancelada ou quando o usuário sair.
 
 ## Arquitetura definida
 

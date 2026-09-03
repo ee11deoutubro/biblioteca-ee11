@@ -7,7 +7,8 @@ const requiredFiles = [
   'vercel.json',
   'api/health.js',
   'assets/logo-escola.png',
-  'assets/cabecalho-escola.png'
+  'assets/cabecalho-escola.png',
+  'assets/estudantes-biblioteca.png'
 ];
 
 await Promise.all(requiredFiles.map((file) => access(new URL(`../${file}`, import.meta.url))));
@@ -21,7 +22,12 @@ if (vercelConfig.cleanUrls !== true) {
 }
 
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
-for (const reference of ['/styles.css', '/app.js', '/assets/logo-escola.png']) {
+for (const reference of [
+  '/styles.css',
+  '/app.js',
+  '/assets/logo-escola.png',
+  '/assets/estudantes-biblioteca.png'
+]) {
   if (!html.includes(reference)) {
     throw new Error(`Referência obrigatória ausente no index.html: ${reference}`);
   }

@@ -3,147 +3,154 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#0b4f9c" />
-  <meta name="description" content="Sistema de gestão de empréstimos da Biblioteca da EE 11 de Outubro" />
+  <meta name="theme-color" content="#071c4d" />
+  <meta name="description" content="Sistema de gestão da Biblioteca da EE 11 de Outubro" />
   <title>Biblioteca • EE 11 de Outubro</title>
+  <script>if ('scrollRestoration' in history) history.scrollRestoration = 'manual';</script>
   <link rel="icon" type="image/png" href="/assets/logo-escola.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <div class="app-shell">
-    <header class="topbar">
-      <div class="brand">
-        <img src="/assets/logo-escola.png" alt="Logo da EE 11 de Outubro" class="brand-logo" />
-        <div>
-          <p class="eyebrow">EE 11 DE OUTUBRO</p>
-          <h1>Biblioteca Escolar</h1>
-          <p class="subtitle">Empréstimos, acervo e acompanhamento</p>
-        </div>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <span class="logo-frame"><img src="/assets/logo-escola.png" alt="Logo da EE 11 de Outubro" /></span>
+        <div><strong>Biblioteca 11</strong><small>EE 11 de Outubro</small></div>
       </div>
-      <button class="icon-btn" type="button" aria-label="Abrir menu" id="menuButton">☰</button>
-    </header>
 
-    <main>
-      <section class="hero-card">
-        <div>
-          <span class="pill">Painel administrativo</span>
-          <h2>Visão geral da biblioteca</h2>
-          <p>Dados demonstrativos nesta primeira etapa. Na próxima, eles serão carregados do Supabase.</p>
+      <nav class="side-nav" aria-label="Navegação administrativa">
+        <span class="nav-label">GESTÃO</span>
+        <button class="side-link active" type="button" data-module="Início">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5v8a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Início</span>
+        </button>
+        <button class="side-link" type="button" data-module="Acervo">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2zm2 0v16m3-12h6m-6 4h6"/></svg><span>Acervo</span>
+        </button>
+        <button class="side-link" type="button" data-module="Solicitações">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18H6zM9 8h6m-6 4h6m-6 4h3"/></svg><span>Solicitações</span><span class="nav-count">0</span>
+        </button>
+        <button class="side-link" type="button" data-module="Empréstimos">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10a3 3 0 0 1 3 3v9H7a3 3 0 0 1-3-3zm13 5 3-3m0 0v6m0-6h-6"/></svg><span>Empréstimos</span>
+        </button>
+        <button class="side-link" type="button" data-module="Devoluções">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 1-2.3-5.7M20 4v7h-7"/></svg><span>Devoluções</span>
+        </button>
+
+        <span class="nav-label nav-label-spaced">ADMINISTRAÇÃO</span>
+        <button class="side-link" type="button" data-module="Pessoas">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m7-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8m13 10v-2a4 4 0 0 0-3-3.9m0-11.8a4 4 0 0 1 0 7.7"/></svg><span>Alunos e professores</span>
+        </button>
+        <button class="side-link" type="button" data-module="Relatórios">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9m6 10V5m6 14v-7m4 7H2"/></svg><span>Relatórios</span>
+        </button>
+        <button class="side-link" type="button" data-module="Configurações">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1z"/></svg><span>Configurações</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="profile-avatar">B</div>
+        <div><strong>Biblioteca</strong><small>Administrador</small></div>
+        <button type="button" aria-label="Opções do perfil">•••</button>
+      </div>
+    </aside>
+
+    <div class="page-shell">
+      <header class="topbar">
+        <button class="menu-button" type="button" id="menuButton" aria-label="Abrir menu">
+          <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        <div class="mobile-brand"><img src="/assets/logo-escola.png" alt="" /><div><strong>Biblioteca 11</strong><small>Painel administrativo</small></div></div>
+        <label class="global-search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <input type="search" placeholder="Buscar livro, aluno ou empréstimo..." aria-label="Busca geral" data-persist="busca-geral" />
+          <kbd>⌘ K</kbd>
+        </label>
+        <div class="top-actions">
+          <button class="round-button" type="button" aria-label="Notificações" data-module="Notificações">
+            <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 13h4"/></svg><i></i>
+          </button>
+          <span class="system-online"><i></i> Sistema online</span>
         </div>
-        <div class="hero-actions">
-          <button class="primary-btn" type="button" data-action="emprestimo">+ Novo empréstimo</button>
-          <button class="secondary-btn" type="button" data-action="devolucao">Registrar devolução</button>
-        </div>
-      </section>
+      </header>
 
-      <section class="metrics-grid" aria-label="Indicadores da biblioteca">
-        <article class="metric-card">
-          <span class="metric-icon">📚</span>
-          <span class="metric-label">Títulos</span>
-          <strong>—</strong>
-          <small>cadastrados</small>
-        </article>
-        <article class="metric-card">
-          <span class="metric-icon">📖</span>
-          <span class="metric-label">Exemplares</span>
-          <strong>—</strong>
-          <small>acervo físico</small>
-        </article>
-        <article class="metric-card">
-          <span class="metric-icon">🟢</span>
-          <span class="metric-label">Disponíveis</span>
-          <strong>—</strong>
-          <small>para empréstimo</small>
-        </article>
-        <article class="metric-card">
-          <span class="metric-icon">🔵</span>
-          <span class="metric-label">Emprestados</span>
-          <strong>—</strong>
-          <small>neste momento</small>
-        </article>
-        <article class="metric-card highlight">
-          <span class="metric-icon">📅</span>
-          <span class="metric-label">Empréstimos hoje</span>
-          <strong>—</strong>
-          <small>movimentação diária</small>
-        </article>
-        <article class="metric-card highlight">
-          <span class="metric-icon">📊</span>
-          <span class="metric-label">Empréstimos no mês</span>
-          <strong>—</strong>
-          <small>movimentação mensal</small>
-        </article>
-        <article class="metric-card warning">
-          <span class="metric-icon">⏰</span>
-          <span class="metric-label">Devolver hoje</span>
-          <strong>—</strong>
-          <small>previsões para hoje</small>
-        </article>
-        <article class="metric-card danger">
-          <span class="metric-icon">⚠️</span>
-          <span class="metric-label">Em atraso</span>
-          <strong>—</strong>
-          <small>precisam de cobrança</small>
-        </article>
-      </section>
+      <main id="pageStart" data-view="Início" tabindex="-1">
+        <section class="welcome-row">
+          <div><p class="date-label" id="todayLabel">PAINEL ADMINISTRATIVO</p><h1>Olá, equipe da biblioteca!</h1><p>Acompanhe o acervo e as movimentações da escola em um só lugar.</p></div>
+          <button class="primary-button desktop-action" type="button" data-action="emprestimo">
+            <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Novo empréstimo
+          </button>
+        </section>
 
-      <section class="content-grid">
-        <article class="panel attention-panel">
-          <div class="panel-heading">
-            <div>
-              <span class="section-kicker">ATENÇÃO HOJE</span>
-              <h3>Pendências e devoluções</h3>
-            </div>
-            <button class="text-btn" type="button">Ver todas</button>
-          </div>
-          <div class="empty-state">
-            <div class="empty-icon">✓</div>
-            <p>Os alertas aparecerão aqui quando o banco estiver conectado.</p>
-          </div>
-        </article>
-
-        <article class="panel quick-panel">
-          <div class="panel-heading">
-            <div>
-              <span class="section-kicker">ACESSO RÁPIDO</span>
-              <h3>Operações</h3>
+        <section class="hero-card">
+          <div class="hero-copy">
+            <span class="hero-pill"><i></i> Biblioteca conectada</span>
+            <h2>Leitura que circula.<br><em>Gestão que funciona.</em></h2>
+            <p>Organize solicitações, empréstimos e devoluções com rapidez e segurança.</p>
+            <div class="hero-actions">
+              <button class="light-button" type="button" data-action="emprestimo">Novo empréstimo</button>
+              <button class="ghost-button" type="button" data-action="devolucao">Registrar devolução</button>
             </div>
           </div>
-          <div class="quick-grid">
-            <button type="button" class="quick-action"><span>📚</span><b>Catálogo</b><small>Consultar acervo</small></button>
-            <button type="button" class="quick-action"><span>👥</span><b>Alunos</b><small>Turmas e histórico</small></button>
-            <button type="button" class="quick-action"><span>📢</span><b>Cobranças</b><small>Livros em atraso</small></button>
-            <button type="button" class="quick-action"><span>📄</span><b>Relatórios</b><small>PDF e Excel</small></button>
-          </div>
-        </article>
-      </section>
+          <div class="hero-visual" aria-hidden="true"><img src="/assets/estudantes-biblioteca.png" alt="" /></div>
+          <span class="hero-circle circle-one"></span><span class="hero-circle circle-two"></span>
+        </section>
 
-      <section class="panel status-panel">
-        <div class="panel-heading">
-          <div>
-            <span class="section-kicker">SISTEMA</span>
-            <h3>Status da implantação</h3>
-          </div>
-          <span class="status-badge" id="apiStatus">Verificando…</span>
-        </div>
-        <div class="steps">
-          <div class="step done"><span>1</span><div><b>Base do APP</b><small>Interface e estrutura online</small></div></div>
-          <div class="step current"><span>2</span><div><b>Supabase</b><small>Banco, autenticação e Storage</small></div></div>
-          <div class="step"><span>3</span><div><b>Chamada Escolar</b><small>Sincronização de alunos e turmas</small></div></div>
-          <div class="step"><span>4</span><div><b>Drive</b><small>Relatórios institucionais</small></div></div>
-        </div>
-      </section>
-    </main>
+        <section class="section-heading">
+          <div><span>VISÃO GERAL</span><h2>Resumo do acervo</h2></div>
+          <small>Dados serão atualizados em tempo real</small>
+        </section>
+
+        <section class="metrics-grid" aria-label="Indicadores da biblioteca">
+          <article class="metric-card blue"><span class="metric-icon"><svg viewBox="0 0 24 24"><path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2zm2 0v16m3-12h6m-6 4h6"/></svg></span><span class="metric-trend">Acervo</span><strong>—</strong><h3>Livros cadastrados</h3><p>Todos os exemplares físicos</p></article>
+          <article class="metric-card green"><span class="metric-icon"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span><span class="metric-trend">Disponível</span><strong>—</strong><h3>Livros disponíveis</h3><p>Prontos para retirada</p></article>
+          <article class="metric-card purple"><span class="metric-icon"><svg viewBox="0 0 24 24"><path d="M4 6h10a3 3 0 0 1 3 3v9H7a3 3 0 0 1-3-3zm13 5 3-3m0 0v6m0-6h-6"/></svg></span><span class="metric-trend">Em circulação</span><strong>—</strong><h3>Livros emprestados</h3><p>Com alunos e professores</p></article>
+          <article class="metric-card red"><span class="metric-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg></span><span class="metric-trend">Atenção</span><strong>—</strong><h3>Devoluções em atraso</h3><p>Precisam de acompanhamento</p></article>
+        </section>
+
+        <section class="dashboard-grid">
+          <article class="panel requests-panel">
+            <div class="panel-header"><div><span class="section-kicker">MOVIMENTAÇÃO</span><h2>Solicitações recentes</h2></div><button class="link-button" type="button" data-module="Solicitações">Ver todas <span>→</span></button></div>
+            <div class="empty-state">
+              <span class="empty-illustration"><svg viewBox="0 0 64 64"><path d="M17 12h30a4 4 0 0 1 4 4v39H21a8 8 0 0 1-8-8V16a4 4 0 0 1 4-4z"/><path d="M21 12v43m8-31h14m-14 9h14"/></svg></span>
+              <h3>Nenhuma solicitação por enquanto</h3>
+              <p>As reservas online de alunos e professores aparecerão aqui.</p>
+              <button type="button" class="soft-button" data-module="Acervo">Consultar acervo</button>
+            </div>
+          </article>
+
+          <article class="panel quick-panel">
+            <div class="panel-header"><div><span class="section-kicker">ATALHOS</span><h2>Acesso rápido</h2></div></div>
+            <div class="quick-actions">
+              <button type="button" class="quick-action" data-module="Acervo"><span class="quick-icon navy"><svg viewBox="0 0 24 24"><path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2zm2 0v16"/></svg></span><span><b>Gerenciar acervo</b><small>Cadastrar e consultar livros</small></span><i>›</i></button>
+              <button type="button" class="quick-action" data-module="Solicitações"><span class="quick-icon amber"><svg viewBox="0 0 24 24"><path d="M6 3h12v18H6zM9 8h6m-6 4h6"/></svg></span><span><b>Solicitações</b><small>Aprovar retiradas pendentes</small></span><i>›</i></button>
+              <button type="button" class="quick-action" data-module="Relatórios"><span class="quick-icon teal"><svg viewBox="0 0 24 24"><path d="M4 19V9m6 10V5m6 14v-7m4 7H2"/></svg></span><span><b>Gerar relatórios</b><small>PDF, Excel e Google Drive</small></span><i>›</i></button>
+              <button type="button" class="quick-action" data-module="Pessoas"><span class="quick-icon violet"><svg viewBox="0 0 24 24"><path d="M16 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m7-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8"/></svg></span><span><b>Alunos e professores</b><small>Turmas, cadastros e histórico</small></span><i>›</i></button>
+            </div>
+          </article>
+        </section>
+
+        <section class="lower-grid">
+          <article class="activity-card"><span class="activity-icon"><svg viewBox="0 0 24 24"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg></span><div><small>EMPRÉSTIMOS HOJE</small><strong>—</strong><span>Movimentação diária</span></div></article>
+          <article class="activity-card"><span class="activity-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></span><div><small>EMPRÉSTIMOS NO MÊS</small><strong>—</strong><span>Movimentação mensal</span></div></article>
+          <article class="implementation-card"><div><span class="section-kicker">IMPLANTAÇÃO</span><h3>Etapa 1 concluída</h3><p>Interface online e pronta para receber o banco de dados.</p></div><div class="progress-ring"><span>25%</span></div></article>
+        </section>
+      </main>
+    </div>
 
     <nav class="bottom-nav" aria-label="Navegação principal">
-      <button class="nav-item active" type="button"><span>⌂</span><small>Início</small></button>
-      <button class="nav-item" type="button"><span>📚</span><small>Catálogo</small></button>
-      <button class="nav-item main-action" type="button"><span>＋</span><small>Empréstimo</small></button>
-      <button class="nav-item" type="button"><span>↩</span><small>Devolução</small></button>
-      <button class="nav-item" type="button"><span>⚙</span><small>Admin</small></button>
+      <button class="bottom-item active" type="button" data-module="Início"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5v8a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><small>Início</small></button>
+      <button class="bottom-item" type="button" data-module="Acervo"><svg viewBox="0 0 24 24"><path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2zm2 0v16"/></svg><small>Acervo</small></button>
+      <button class="bottom-main" type="button" data-action="emprestimo"><span><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><small>Empréstimo</small></button>
+      <button class="bottom-item" type="button" data-module="Solicitações"><svg viewBox="0 0 24 24"><path d="M6 3h12v18H6zM9 8h6m-6 4h6"/></svg><small>Pedidos</small></button>
+      <button class="bottom-item" type="button" data-module="Mais opções"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg><small>Mais</small></button>
     </nav>
   </div>
 
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
   <div class="toast" role="status" aria-live="polite" id="toast"></div>
   <script src="/app.js"></script>
 </body>
