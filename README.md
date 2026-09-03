@@ -27,6 +27,7 @@ QR Code e código de barras ficam apenas preparados para uma evolução posterio
 - Vercel: hospedagem e APIs
 - Supabase: banco, autenticação e Storage
 - Chamada Escolar: origem de alunos e turmas
+- SGDE: o **Código do aluno** é o identificador oficial para solicitações e empréstimos
 - Google Drive: relatórios institucionais
 
 ## Publicação no GitHub
@@ -65,6 +66,11 @@ exemplares já cadastrados.
 Depois desta atualização, execute uma única vez no SQL Editor do Supabase o
 arquivo `atualizar-permissoes-gestao.sql`. Ele autoriza tanto **Gestão Escolar**
 quanto **Bibliotecário** a administrar o acervo.
+
+Nos fluxos de empréstimo, o aluno deverá ser localizado pelo **Código do aluno
+no SGDE**. O nome será exibido apenas para conferência, nunca usado como
+identificador principal. Na estrutura atual, esse código oficial é armazenado
+no campo `matricula` da tabela `pessoas` para manter compatibilidade com a base.
 
 ## Verificação local
 

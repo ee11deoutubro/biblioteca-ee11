@@ -7,6 +7,8 @@ const requiredFiles = [
   'favicon.ico',
   'favicon-32x32.png',
   'apple-touch-icon.png',
+  'assets/app-icon.png',
+  'assets/og-biblioteca.png',
   'app.js',
   'config.js',
   'supabase-client.js',
@@ -34,6 +36,8 @@ for (const reference of [
   '/auth.css',
   '/favicon.ico',
   '/apple-touch-icon.png',
+  '/assets/app-icon.png',
+  '/assets/og-biblioteca.png',
   '/app.js',
   '/config.js',
   '/supabase-client.js',
@@ -47,6 +51,9 @@ for (const reference of [
 
 if (!html.includes('Cadastrar novo título')) {
   throw new Error('O acesso ao cadastro de título não está identificado corretamente.');
+}
+if (!html.includes('property="og:image"') || !html.includes('twitter:card')) {
+  throw new Error('A prévia de compartilhamento não está configurada.');
 }
 if (!html.includes('id="catalogCategories"') || !html.includes('id="editCoverPreview"')) {
   throw new Error('Os filtros por gênero ou a edição de capa estão incompletos.');
