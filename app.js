@@ -11,6 +11,13 @@
   const menuButton = document.getElementById('menuButton');
   const todayLabel = document.getElementById('todayLabel');
   const pageStart = document.getElementById('pageStart');
+  const systemStatus = document.getElementById('systemStatus');
+  const metricTitles = document.getElementById('metricTitles');
+  const metricCollectionDetail = document.getElementById('metricCollectionDetail');
+  const metricAvailable = document.getElementById('metricAvailable');
+  const metricBorrowed = document.getElementById('metricBorrowed');
+  const metricOverdue = document.getElementById('metricOverdue');
+  const metricOverdueNote = document.getElementById('metricOverdueNote');
   let toastTimer;
 
   function readStorage(key, fallback) {
@@ -59,6 +66,77 @@
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: 'auto' }));
     setTimeout(() => window.scrollTo({ top: 0, left: 0, behavior: 'auto' }), 80);
+  }
+
+  function formatNumber(value) {
+    return new Intl.NumberFormat('pt-BR').format(Number(value) || 0);
+  }
+
+  function setConnectionStatus(text, state) {
+    if (!systemStatus) return;
+    systemStatus.classList.remove('connected', 'offline');
+    if (state) systemStatus.classList.add(state);
+    systemStatus.lastChild.textContent = ` ${text}`;
+  }
+
+  async function loadCompleteCatalog(client) {
+    const pageSize = 1000;
+    const catalog = [];
+
+    for (let start = 0; start < 20000; start += pageSize) {
+      const { data, error } = await client
+        .from('acervo_publico')
+        .select('id,total_exemplares,disponiveis,emprestados')
+        .range(start, start + pageSize - 1);
+
+      if (error) throw error;
+      catalog.push(...(data || []));
+      if (!data || data.length < pageSize) break;
+    }
+
+    return catalog;
+  }
+
+  async function connectDashboard() {
+    const client = window.bibliotecaSupabase;
+
+    if (!client) {
+      setConnectionStatus(window.bibliotecaSupabaseError || 'Banco indisponível', 'offline');
+      return;
+    }
+
+    try {
+      const catalog = await loadCompleteCatalog(client);
+      const totals = catalog.reduce((summary, book) => {
+        summary.copies += Number(book.total_exemplares) || 0;
+        summary.available += Number(book.disponiveis) || 0;
+        summary.borrowed += Number(book.emprestados) || 0;
+        return summary;
+      }, { copies: 0, available: 0, borrowed: 0 });
+
+      metricTitles.textContent = formatNumber(catalog.length);
+      metricCollectionDetail.textContent = `${formatNumber(totals.copies)} exemplares físicos`;
+      metricAvailable.textContent = formatNumber(totals.available);
+      metricBorrowed.textContent = formatNumber(totals.borrowed);
+
+      const { data: authData } = await client.auth.getSession();
+      if (authData?.session) {
+        const { count, error } = await client
+          .from('emprestimos_detalhados')
+          .select('id', { count: 'exact', head: true })
+          .eq('situacao', 'em_atraso');
+
+        if (!error) {
+          metricOverdue.textContent = formatNumber(count);
+          metricOverdueNote.textContent = 'Precisam de acompanhamento';
+        }
+      }
+
+      setConnectionStatus('Banco conectado', 'connected');
+    } catch (error) {
+      console.error('Falha ao consultar o Supabase:', error);
+      setConnectionStatus('Falha na conexão', 'offline');
+    }
   }
 
   function availableView(name) {
@@ -240,5 +318,6 @@
     leave: leaveApp
   });
 
+  connectDashboard();
   fetch('/api/health').catch(() => null);
 })();

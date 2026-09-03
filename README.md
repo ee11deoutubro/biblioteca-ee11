@@ -5,7 +5,7 @@ MVP online para gestão da biblioteca escolar da EE 11 de Outubro.
 ## Situação do desenvolvimento
 
 - Etapa 1 — identidade visual, painel responsivo e estrutura para Vercel: concluída
-- Etapa 2 — Supabase (banco, autenticação e Storage): próxima etapa
+- Etapa 2 — Supabase (banco, cliente e Storage): em andamento
 - Etapa 3 — integração com alunos e turmas do Chamada Escolar
 - Etapa 4 — acervo e controle interno de exemplares
 - Etapa 5 — empréstimos, devoluções e renovações
@@ -42,7 +42,13 @@ QR Code e código de barras ficam apenas preparados para uma evolução posterio
 3. Mantenha **Framework Preset** como `Other` e o diretório raiz como `./`.
 4. Publique sem comando de build. A Vercel servirá o `index.html` e a função `/api/health`.
 
-Nesta etapa ainda não existem variáveis de ambiente. Elas serão incluídas somente na Etapa 2, quando o Supabase for conectado.
+O cliente web usa apenas a URL do projeto e a chave pública do Supabase em
+`config.js`. Chaves secretas e administrativas nunca devem ser adicionadas ao
+repositório ou enviadas ao navegador.
+
+O painel consulta a view pública `acervo_publico` e apresenta títulos,
+exemplares físicos, unidades disponíveis e unidades emprestadas. Indicadores
+administrativos protegidos serão liberados depois do login do bibliotecário.
 
 ## Verificação local
 

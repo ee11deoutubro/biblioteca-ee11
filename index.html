@@ -73,7 +73,7 @@
           <button class="round-button" type="button" aria-label="Notificações" data-module="Notificações">
             <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 13h4"/></svg><i></i>
           </button>
-          <span class="system-online"><i></i> Sistema online</span>
+          <span class="system-online" id="systemStatus"><i></i> Conectando ao banco...</span>
         </div>
       </header>
 
@@ -105,10 +105,10 @@
         </section>
 
         <section class="metrics-grid" aria-label="Indicadores da biblioteca">
-          <article class="metric-card blue"><span class="metric-icon"><svg viewBox="0 0 24 24"><path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2zm2 0v16m3-12h6m-6 4h6"/></svg></span><span class="metric-trend">Acervo</span><strong>—</strong><h3>Livros cadastrados</h3><p>Todos os exemplares físicos</p></article>
-          <article class="metric-card green"><span class="metric-icon"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span><span class="metric-trend">Disponível</span><strong>—</strong><h3>Livros disponíveis</h3><p>Prontos para retirada</p></article>
-          <article class="metric-card purple"><span class="metric-icon"><svg viewBox="0 0 24 24"><path d="M4 6h10a3 3 0 0 1 3 3v9H7a3 3 0 0 1-3-3zm13 5 3-3m0 0v6m0-6h-6"/></svg></span><span class="metric-trend">Em circulação</span><strong>—</strong><h3>Livros emprestados</h3><p>Com alunos e professores</p></article>
-          <article class="metric-card red"><span class="metric-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg></span><span class="metric-trend">Atenção</span><strong>—</strong><h3>Devoluções em atraso</h3><p>Precisam de acompanhamento</p></article>
+          <article class="metric-card blue"><span class="metric-icon"><svg viewBox="0 0 24 24"><path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2zm2 0v16m3-12h6m-6 4h6"/></svg></span><span class="metric-trend">Acervo</span><strong id="metricTitles">—</strong><h3>Títulos cadastrados</h3><p id="metricCollectionDetail">— exemplares físicos</p></article>
+          <article class="metric-card green"><span class="metric-icon"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span><span class="metric-trend">Disponível</span><strong id="metricAvailable">—</strong><h3>Livros disponíveis</h3><p>Prontos para retirada</p></article>
+          <article class="metric-card purple"><span class="metric-icon"><svg viewBox="0 0 24 24"><path d="M4 6h10a3 3 0 0 1 3 3v9H7a3 3 0 0 1-3-3zm13 5 3-3m0 0v6m0-6h-6"/></svg></span><span class="metric-trend">Em circulação</span><strong id="metricBorrowed">—</strong><h3>Livros emprestados</h3><p>Com alunos e professores</p></article>
+          <article class="metric-card red"><span class="metric-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg></span><span class="metric-trend">Atenção</span><strong id="metricOverdue">—</strong><h3>Devoluções em atraso</h3><p id="metricOverdueNote">Disponível após o login</p></article>
         </section>
 
         <section class="dashboard-grid">
@@ -152,6 +152,9 @@
 
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
   <div class="toast" role="status" aria-live="polite" id="toast"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="/config.js"></script>
+  <script src="/supabase-client.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>
