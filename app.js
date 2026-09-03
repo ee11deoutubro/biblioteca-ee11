@@ -75,10 +75,19 @@
   }
 
   function forceInitialTop() {
-    // Evita que o navegador reabra o APP no meio da tela.
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-    requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: 'auto' }));
-    setTimeout(() => window.scrollTo({ top: 0, left: 0, behavior: 'auto' }), 80);
+    // Safari/iOS pode restaurar a rolagem depois que a tela visível é trocada.
+    const reset = () => {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    };
+
+    reset();
+    requestAnimationFrame(() => {
+      reset();
+      requestAnimationFrame(reset);
+    });
+    [80, 220, 500].forEach((delay) => setTimeout(reset, delay));
   }
 
   function formatNumber(value) {
@@ -120,7 +129,6 @@
     document.body.classList.add('auth-loading');
     setAuthMessage(message);
     forceInitialTop();
-    setTimeout(() => loginEmail?.focus({ preventScroll: true }), 80);
   }
 
   function showAdmin(profile) {
@@ -461,7 +469,11 @@
     if (event.key === 'Escape') closeSidebar();
   });
 
-  window.addEventListener('pageshow', forceInitialTop);
+  window.addEventListener('load', forceInitialTop);
+  window.addEventListener('pageshow', (event) => {
+    // Ao voltar pelo histórico, o navegador preserva exatamente a tela anterior.
+    if (!event.persisted) forceInitialTop();
+  });
 
   // API central para as próximas telas: finalizar/cancelar limpa somente a atividade;
   // sair limpa toda a navegação e os rascunhos do usuário.
