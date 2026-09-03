@@ -4,6 +4,9 @@ const requiredFiles = [
   'index.html',
   'styles.css',
   'auth.css',
+  'favicon.ico',
+  'favicon-32x32.png',
+  'apple-touch-icon.png',
   'app.js',
   'config.js',
   'supabase-client.js',
@@ -28,6 +31,8 @@ const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 for (const reference of [
   '/styles.css',
   '/auth.css',
+  '/favicon.ico',
+  '/apple-touch-icon.png',
   '/app.js',
   '/config.js',
   '/supabase-client.js',

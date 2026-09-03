@@ -95,7 +95,6 @@
     // Impede a restauração tardia de rolagem do Safari antes da primeira ação real.
     releaseTopLock();
     let locked = true;
-    let timer;
 
     const reset = () => {
       document.documentElement.scrollTop = 0;
@@ -110,7 +109,6 @@
     const release = () => {
       if (!locked) return;
       locked = false;
-      clearTimeout(timer);
       window.removeEventListener('scroll', keepAtTop);
       window.removeEventListener('touchstart', release);
       window.removeEventListener('pointerdown', release);
@@ -123,7 +121,6 @@
     window.addEventListener('pointerdown', release, { passive: true, once: true });
     window.addEventListener('wheel', release, { passive: true, once: true });
     window.addEventListener('keydown', release, { once: true });
-    timer = setTimeout(release, 2200);
     releaseTopLock = release;
 
     reset();
@@ -519,6 +516,10 @@
   window.addEventListener('pageshow', (event) => {
     // Login sempre no topo; páginas internas preservam a posição ao voltar.
     if (!authScreen.hidden || !event.persisted) lockViewAtTop();
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && !authScreen.hidden) lockViewAtTop();
   });
 
   // API central para as próximas telas: finalizar/cancelar limpa somente a atividade;

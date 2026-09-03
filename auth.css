@@ -7,6 +7,11 @@ body {
   overflow-x: hidden;
 }
 
+body.auth-loading,
+.auth-screen {
+  overflow-anchor: none;
+}
+
 button,
 a,
 input,
@@ -202,6 +207,10 @@ textarea {
     background: transparent;
   }
   .auth-brand { align-items: center; }
+  .auth-brand {
+    position: sticky;
+    top: max(12px, env(safe-area-inset-top));
+  }
   .auth-logo { width: 48px; height: 48px; border-radius: 14px; }
   .auth-logo img { width: 43px; height: 43px; }
   .auth-copy { margin-top: 35px; }
