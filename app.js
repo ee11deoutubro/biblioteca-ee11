@@ -32,6 +32,7 @@
   const metricOverdue = document.getElementById('metricOverdue');
   const metricOverdueNote = document.getElementById('metricOverdueNote');
   let toastTimer;
+  let releaseTopLock = () => {};
 
   function readStorage(key, fallback) {
     try {
@@ -90,6 +91,48 @@
     [80, 220, 500].forEach((delay) => setTimeout(reset, delay));
   }
 
+  function lockViewAtTop() {
+    // Impede a restauração tardia de rolagem do Safari antes da primeira ação real.
+    releaseTopLock();
+    let locked = true;
+    let timer;
+
+    const reset = () => {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      window.scrollTo(0, 0);
+    };
+
+    const keepAtTop = () => {
+      if (locked && window.scrollY !== 0) reset();
+    };
+
+    const release = () => {
+      if (!locked) return;
+      locked = false;
+      clearTimeout(timer);
+      window.removeEventListener('scroll', keepAtTop);
+      window.removeEventListener('touchstart', release);
+      window.removeEventListener('pointerdown', release);
+      window.removeEventListener('wheel', release);
+      window.removeEventListener('keydown', release);
+    };
+
+    window.addEventListener('scroll', keepAtTop, { passive: true });
+    window.addEventListener('touchstart', release, { passive: true, once: true });
+    window.addEventListener('pointerdown', release, { passive: true, once: true });
+    window.addEventListener('wheel', release, { passive: true, once: true });
+    window.addEventListener('keydown', release, { once: true });
+    timer = setTimeout(release, 2200);
+    releaseTopLock = release;
+
+    reset();
+    requestAnimationFrame(() => requestAnimationFrame(reset));
+    setTimeout(reset, 100);
+    setTimeout(reset, 450);
+    setTimeout(reset, 1000);
+  }
+
   function formatNumber(value) {
     return new Intl.NumberFormat('pt-BR').format(Number(value) || 0);
   }
@@ -128,7 +171,7 @@
     authScreen.hidden = false;
     document.body.classList.add('auth-loading');
     setAuthMessage(message);
-    forceInitialTop();
+    lockViewAtTop();
   }
 
   function showAdmin(profile) {
@@ -143,7 +186,7 @@
     adminApp.hidden = false;
     document.body.classList.remove('auth-loading');
     setAuthMessage('');
-    forceInitialTop();
+    lockViewAtTop();
   }
 
   async function authorizeSession(session) {
@@ -469,10 +512,13 @@
     if (event.key === 'Escape') closeSidebar();
   });
 
-  window.addEventListener('load', forceInitialTop);
+  window.addEventListener('load', () => {
+    if (!authScreen.hidden) lockViewAtTop();
+    else forceInitialTop();
+  });
   window.addEventListener('pageshow', (event) => {
-    // Ao voltar pelo histórico, o navegador preserva exatamente a tela anterior.
-    if (!event.persisted) forceInitialTop();
+    // Login sempre no topo; páginas internas preservam a posição ao voltar.
+    if (!authScreen.hidden || !event.persisted) lockViewAtTop();
   });
 
   // API central para as próximas telas: finalizar/cancelar limpa somente a atividade;

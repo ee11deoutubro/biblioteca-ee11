@@ -1,6 +1,6 @@
 {
   "name": "biblioteca-ee11",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "private": true,
   "type": "module",
   "description": "Sistema de gestão de empréstimos da Biblioteca da EE 11 de Outubro",
