@@ -5,9 +5,9 @@ MVP online para gestão da biblioteca escolar da EE 11 de Outubro.
 ## Situação do desenvolvimento
 
 - Etapa 1 — identidade visual, painel responsivo e estrutura para Vercel: concluída
-- Etapa 2 — Supabase (banco, cliente, Storage e autenticação administrativa): em andamento
+- Etapa 2 — Supabase (banco, cliente, Storage e autenticação administrativa): concluída
 - Etapa 3 — integração com alunos e turmas do Chamada Escolar
-- Etapa 4 — acervo e controle interno de exemplares
+- Etapa 4 — acervo e controle interno de exemplares: em andamento
 - Etapa 5 — empréstimos, devoluções e renovações
 - Etapa 6 — painel, cobranças e relatórios
 - Etapa 7 — Google Drive e notificações
@@ -51,6 +51,11 @@ exemplares físicos, unidades disponíveis e unidades emprestadas. O acesso
 administrativo exige autenticação e um perfil ativo do tipo `gestao_escolar`
 ou `bibliotecario`; as permissões de dados continuam protegidas pelo RLS do
 Supabase mesmo que alguém tente acessar as APIs fora da interface.
+
+Na tela **Acervo**, livro e quantidade de exemplares são cadastrados juntos.
+Quando um ISBN já existe, o sistema adiciona os novos exemplares ao título
+existente, evitando cadastros redundantes. As capas são armazenadas no bucket
+`capas-livros` e cada exemplar recebe um código interno único.
 
 ## Verificação local
 

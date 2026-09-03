@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#071c4d" />
   <meta name="description" content="Sistema de gestão da Biblioteca da EE 11 de Outubro" />
-  <meta name="app-version" content="0.4.5" />
+  <meta name="app-version" content="0.5.0" />
   <title>Biblioteca • EE 11 de Outubro</title>
   <script>
     (() => {
@@ -44,8 +44,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/styles.css" />
-  <link rel="stylesheet" href="/auth.css?v=0.4.5" />
+  <link rel="stylesheet" href="/styles.css?v=0.5.0" />
+  <link rel="stylesheet" href="/auth.css?v=0.5.0" />
 </head>
 <body class="auth-loading">
   <section class="auth-screen" id="authScreen" aria-labelledby="loginTitle">
@@ -223,8 +223,51 @@
         <section class="lower-grid">
           <article class="activity-card"><span class="activity-icon"><svg viewBox="0 0 24 24"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg></span><div><small>EMPRÉSTIMOS HOJE</small><strong>—</strong><span>Movimentação diária</span></div></article>
           <article class="activity-card"><span class="activity-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></span><div><small>EMPRÉSTIMOS NO MÊS</small><strong>—</strong><span>Movimentação mensal</span></div></article>
-          <article class="implementation-card"><div><span class="section-kicker">IMPLANTAÇÃO</span><h3>Etapa 2 em andamento</h3><p>Banco conectado e acesso administrativo protegido.</p></div><div class="progress-ring"><span>50%</span></div></article>
+          <article class="implementation-card"><div><span class="section-kicker">IMPLANTAÇÃO</span><h3>Acervo em implantação</h3><p>Banco e acesso protegidos; cadastro de livros já disponível.</p></div><div class="progress-ring"><span>60%</span></div></article>
         </section>
+      </main>
+
+      <main class="collection-view" data-view="Acervo" tabindex="-1" hidden>
+        <section class="module-heading">
+          <div><p class="date-label">GESTÃO DA BIBLIOTECA</p><h1>Acervo</h1><p>Cadastre cada obra e seus exemplares físicos no mesmo lugar.</p></div>
+          <button class="primary-button" id="openBookForm" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Novo livro
+          </button>
+        </section>
+
+        <section class="collection-toolbar" aria-label="Ferramentas do acervo">
+          <label class="collection-search">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+            <input id="catalogSearch" type="search" placeholder="Buscar por título, autor, ISBN ou categoria" autocomplete="off" data-persist="busca-acervo" />
+          </label>
+          <label class="collection-filter"><span>Situação</span><select id="catalogAvailability"><option value="todos">Todos</option><option value="disponiveis">Disponíveis</option><option value="indisponiveis">Sem disponibilidade</option></select></label>
+          <button class="secondary-button" id="refreshCatalog" type="button">Atualizar</button>
+        </section>
+
+        <section class="book-form-panel" id="bookFormPanel" data-activity-panel="cadastro-livro" hidden>
+          <div class="form-panel-heading"><div><span class="section-kicker">CADASTRO ÚNICO</span><h2>Livro e exemplares</h2><p>Informe a obra uma vez e escolha quantos exemplares físicos serão cadastrados.</p></div><button class="icon-close" id="closeBookForm" type="button" aria-label="Fechar cadastro">×</button></div>
+          <form id="bookForm" novalidate>
+            <div class="form-grid">
+              <label class="app-field field-wide"><span>Título *</span><input name="titulo" type="text" required maxlength="180" data-persist="livro-titulo" data-activity="cadastro-livro" /></label>
+              <label class="app-field"><span>Autor *</span><input name="autor" type="text" required maxlength="150" data-persist="livro-autor" data-activity="cadastro-livro" /></label>
+              <label class="app-field"><span>ISBN</span><input name="isbn" type="text" inputmode="numeric" maxlength="20" placeholder="Somente números" data-persist="livro-isbn" data-activity="cadastro-livro" /></label>
+              <label class="app-field"><span>Categoria</span><input name="categoria" type="text" maxlength="80" placeholder="Ex.: Literatura brasileira" data-persist="livro-categoria" data-activity="cadastro-livro" /></label>
+              <label class="app-field"><span>Editora</span><input name="editora" type="text" maxlength="100" data-persist="livro-editora" data-activity="cadastro-livro" /></label>
+              <label class="app-field"><span>Ano de publicação</span><input name="ano_publicacao" type="number" min="1000" max="2200" inputmode="numeric" data-persist="livro-ano" data-activity="cadastro-livro" /></label>
+              <label class="app-field"><span>Quantidade de exemplares *</span><input name="quantidade" type="number" min="1" max="100" value="1" inputmode="numeric" required data-persist="livro-quantidade" data-activity="cadastro-livro" /></label>
+              <label class="app-field"><span>Localização</span><input name="localizacao" type="text" maxlength="80" placeholder="Ex.: Estante A3" data-persist="livro-localizacao" data-activity="cadastro-livro" /></label>
+              <label class="app-field"><span>Estado de conservação</span><select name="conservacao" data-persist="livro-conservacao" data-activity="cadastro-livro"><option value="novo">Novo</option><option value="otimo">Ótimo</option><option value="bom" selected>Bom</option><option value="regular">Regular</option><option value="danificado">Danificado</option></select></label>
+              <label class="app-field"><span>Origem</span><select name="origem" data-persist="livro-origem" data-activity="cadastro-livro"><option value="">Não informado</option><option value="Compra">Compra</option><option value="Doação">Doação</option><option value="PNLD">PNLD</option><option value="Outro">Outro</option></select></label>
+              <label class="app-field field-wide"><span>Capa do livro</span><input name="capa" type="file" accept="image/jpeg,image/png,image/webp" /><small>JPG, PNG ou WebP, com até 5 MB.</small></label>
+            </div>
+            <p class="form-feedback" id="bookFormFeedback" role="alert" aria-live="polite"></p>
+            <div class="form-actions"><button class="secondary-button" id="cancelBookForm" type="button">Cancelar</button><button class="primary-button" id="saveBookButton" type="submit"><span>Salvar no acervo</span></button></div>
+          </form>
+        </section>
+
+        <section class="catalog-summary" aria-live="polite"><div><strong id="catalogCount">0</strong><span>títulos encontrados</span></div><div><strong id="catalogCopies">0</strong><span>exemplares físicos</span></div><div><strong id="catalogAvailable">0</strong><span>disponíveis agora</span></div></section>
+        <section class="catalog-grid" id="catalogGrid" aria-label="Livros cadastrados"></section>
+        <section class="catalog-empty" id="catalogEmpty" hidden><span class="empty-illustration"><svg viewBox="0 0 64 64"><path d="M17 12h30a4 4 0 0 1 4 4v39H21a8 8 0 0 1-8-8V16a4 4 0 0 1 4-4z"/><path d="M21 12v43m8-31h14m-14 9h14"/></svg></span><h2>Nenhum livro encontrado</h2><p>Cadastre o primeiro livro ou altere os filtros da consulta.</p></section>
       </main>
     </div>
 
@@ -242,6 +285,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="/config.js"></script>
   <script src="/supabase-client.js"></script>
-  <script src="/app.js?v=0.4.5"></script>
+  <script src="/app.js?v=0.5.0"></script>
 </body>
 </html>

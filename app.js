@@ -31,8 +31,25 @@
   const metricBorrowed = document.getElementById('metricBorrowed');
   const metricOverdue = document.getElementById('metricOverdue');
   const metricOverdueNote = document.getElementById('metricOverdueNote');
+  const catalogGrid = document.getElementById('catalogGrid');
+  const catalogEmpty = document.getElementById('catalogEmpty');
+  const catalogSearch = document.getElementById('catalogSearch');
+  const catalogAvailability = document.getElementById('catalogAvailability');
+  const catalogCount = document.getElementById('catalogCount');
+  const catalogCopies = document.getElementById('catalogCopies');
+  const catalogAvailable = document.getElementById('catalogAvailable');
+  const refreshCatalog = document.getElementById('refreshCatalog');
+  const bookFormPanel = document.getElementById('bookFormPanel');
+  const bookForm = document.getElementById('bookForm');
+  const openBookForm = document.getElementById('openBookForm');
+  const closeBookForm = document.getElementById('closeBookForm');
+  const cancelBookForm = document.getElementById('cancelBookForm');
+  const saveBookButton = document.getElementById('saveBookButton');
+  const bookFormFeedback = document.getElementById('bookFormFeedback');
   let toastTimer;
   let releaseTopLock = () => {};
+  let activeProfile = null;
+  let catalogCache = [];
 
   function readStorage(key, fallback) {
     try {
@@ -134,6 +151,23 @@
     return new Intl.NumberFormat('pt-BR').format(Number(value) || 0);
   }
 
+  function normalizeSearch(value) {
+    return String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
   function setConnectionStatus(text, state) {
     if (!systemStatus) return;
     systemStatus.classList.remove('connected', 'offline');
@@ -164,6 +198,7 @@
   }
 
   function showLogin(message = '') {
+    activeProfile = null;
     adminApp.hidden = true;
     authScreen.hidden = false;
     document.body.classList.add('auth-loading');
@@ -176,6 +211,7 @@
       ? 'Gestão Escolar'
       : 'Bibliotecário';
 
+    activeProfile = profile;
     profileName.textContent = profile.nome;
     profileRole.textContent = roleLabel;
     profileInitial.textContent = profile.nome.trim().charAt(0).toUpperCase() || 'B';
@@ -239,7 +275,8 @@
     for (let start = 0; start < 20000; start += pageSize) {
       const { data, error } = await client
         .from('acervo_publico')
-        .select('id,total_exemplares,disponiveis,emprestados')
+        .select('id,titulo,subtitulo,autor,isbn,editora,ano_publicacao,categoria,capa_url,total_exemplares,disponiveis,reservados,emprestados')
+        .order('titulo', { ascending: true })
         .range(start, start + pageSize - 1);
 
       if (error) throw error;
@@ -248,6 +285,83 @@
     }
 
     return catalog;
+  }
+
+  function renderCatalog() {
+    if (!catalogGrid) return;
+
+    const query = normalizeSearch(catalogSearch?.value);
+    const availability = catalogAvailability?.value || 'todos';
+    const filtered = catalogCache.filter((book) => {
+      const searchable = normalizeSearch([
+        book.titulo,
+        book.autor,
+        book.isbn,
+        book.categoria,
+        book.editora
+      ].filter(Boolean).join(' '));
+      const matchesQuery = !query || searchable.includes(query);
+      const availableCopies = Number(book.disponiveis) || 0;
+      const matchesAvailability = availability === 'todos'
+        || (availability === 'disponiveis' && availableCopies > 0)
+        || (availability === 'indisponiveis' && availableCopies === 0);
+      return matchesQuery && matchesAvailability;
+    });
+
+    const totals = filtered.reduce((summary, book) => {
+      summary.copies += Number(book.total_exemplares) || 0;
+      summary.available += Number(book.disponiveis) || 0;
+      return summary;
+    }, { copies: 0, available: 0 });
+
+    catalogCount.textContent = formatNumber(filtered.length);
+    catalogCopies.textContent = formatNumber(totals.copies);
+    catalogAvailable.textContent = formatNumber(totals.available);
+    catalogEmpty.hidden = filtered.length > 0;
+    catalogGrid.hidden = filtered.length === 0;
+
+    catalogGrid.innerHTML = filtered.map((book) => {
+      const available = Number(book.disponiveis) || 0;
+      const total = Number(book.total_exemplares) || 0;
+      const cover = book.capa_url
+        ? `<img src="${escapeHtml(book.capa_url)}" alt="Capa de ${escapeHtml(book.titulo)}" loading="lazy" />`
+        : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2zm2 0v16m3-12h6m-6 4h6"/></svg>';
+      const metadata = [book.categoria, book.ano_publicacao, book.isbn ? `ISBN ${book.isbn}` : null]
+        .filter(Boolean)
+        .map((item) => `<span>${escapeHtml(item)}</span>`)
+        .join('');
+
+      return `<article class="catalog-card" data-book-id="${escapeHtml(book.id)}">
+        <div class="book-cover">${cover}</div>
+        <div class="catalog-card-content">
+          <h2 title="${escapeHtml(book.titulo)}">${escapeHtml(book.titulo)}</h2>
+          <p class="catalog-author">${escapeHtml(book.autor)}</p>
+          <div class="catalog-meta">${metadata || '<span>Sem categoria</span>'}</div>
+          <div class="availability-line"><strong class="${available ? '' : 'unavailable'}">${available ? `${available} disponível${available === 1 ? '' : 'is'}` : 'Indisponível'}</strong><span>${total} exemplar${total === 1 ? '' : 'es'}</span></div>
+        </div>
+      </article>`;
+    }).join('');
+  }
+
+  async function refreshCompleteCatalog(showLoading = false) {
+    const client = window.bibliotecaSupabase;
+    if (!client) return;
+    if (showLoading && refreshCatalog) {
+      refreshCatalog.disabled = true;
+      refreshCatalog.textContent = 'Atualizando...';
+    }
+    try {
+      catalogCache = await loadCompleteCatalog(client);
+      renderCatalog();
+    } catch (error) {
+      console.error('Falha ao carregar o acervo:', error);
+      showToast('Não foi possível atualizar o acervo.');
+    } finally {
+      if (refreshCatalog) {
+        refreshCatalog.disabled = false;
+        refreshCatalog.textContent = 'Atualizar';
+      }
+    }
   }
 
   async function connectDashboard() {
@@ -260,6 +374,8 @@
 
     try {
       const catalog = await loadCompleteCatalog(client);
+      catalogCache = catalog;
+      renderCatalog();
       const totals = catalog.reduce((summary, book) => {
         summary.copies += Number(book.total_exemplares) || 0;
         summary.available += Number(book.disponiveis) || 0;
@@ -322,6 +438,7 @@
     });
 
     if (options.scroll !== false) scrollToContent(options.behavior || 'smooth');
+    if (selectedName === 'Acervo' && window.bibliotecaSupabase) refreshCompleteCatalog();
     return Boolean(requestedView);
   }
 
@@ -365,6 +482,191 @@
     writeStorage(NAVIGATION_KEY, { ...state, activeActivity: null });
   }
 
+  function setBookFormFeedback(message = '', success = false) {
+    if (!bookFormFeedback) return;
+    bookFormFeedback.textContent = message;
+    bookFormFeedback.classList.toggle('success', success);
+  }
+
+  function openCatalogForm() {
+    if (!bookFormPanel) return;
+    bookFormPanel.hidden = false;
+    writeStorage(NAVIGATION_KEY, {
+      activeView: 'Acervo',
+      activeActivity: 'cadastro-livro'
+    });
+    setBookFormFeedback();
+    bookFormPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    bookForm?.elements.namedItem('titulo')?.focus({ preventScroll: true });
+  }
+
+  function hideCatalogForm({ clear = false } = {}) {
+    if (clear) {
+      clearActivity('cadastro-livro');
+      bookForm?.reset();
+      setBookFormFeedback();
+    }
+    if (bookFormPanel) bookFormPanel.hidden = true;
+    if (!clear) {
+      const state = readStorage(NAVIGATION_KEY, {});
+      writeStorage(NAVIGATION_KEY, { ...state, activeActivity: null });
+    }
+    scrollToContent();
+  }
+
+  async function uploadBookCover(client, file) {
+    if (!file || !file.size) return { url: null, path: null };
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      throw new Error('A capa deve estar em JPG, PNG ou WebP.');
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error('A imagem da capa deve ter no máximo 5 MB.');
+    }
+
+    const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const path = `${activeProfile.id}/${crypto.randomUUID()}.${extension}`;
+    const { error } = await client.storage
+      .from('capas-livros')
+      .upload(path, file, { cacheControl: '3600', upsert: false });
+    if (error) throw error;
+    const { data } = client.storage.from('capas-livros').getPublicUrl(path);
+    return { url: data.publicUrl, path };
+  }
+
+  async function saveBookAndCopies(event) {
+    event.preventDefault();
+    if (!bookForm || !activeProfile) return;
+
+    const client = window.bibliotecaSupabase;
+    if (!client) {
+      setBookFormFeedback('Não foi possível conectar ao banco.');
+      return;
+    }
+
+    const formData = new FormData(bookForm);
+    const title = String(formData.get('titulo') || '').trim();
+    const author = String(formData.get('autor') || '').trim();
+    const isbn = String(formData.get('isbn') || '').replace(/[^0-9Xx]/g, '').toUpperCase();
+    const quantity = Number(formData.get('quantidade'));
+    const publicationYear = Number(formData.get('ano_publicacao')) || null;
+    const coverFile = formData.get('capa');
+
+    if (!title || !author) {
+      setBookFormFeedback('Preencha o título e o autor.');
+      (!title ? bookForm.elements.namedItem('titulo') : bookForm.elements.namedItem('autor'))?.focus();
+      return;
+    }
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) {
+      setBookFormFeedback('Informe uma quantidade entre 1 e 100 exemplares.');
+      bookForm.elements.namedItem('quantidade')?.focus();
+      return;
+    }
+
+    saveBookButton.disabled = true;
+    saveBookButton.querySelector('span').textContent = 'Salvando...';
+    setBookFormFeedback('Enviando os dados do livro...', true);
+
+    let uploadedCover = { url: null, path: null };
+    let createdBookId = null;
+    let updatedExistingCoverId = null;
+
+    try {
+      let book = null;
+      if (isbn) {
+        const { data, error } = await client
+          .from('livros')
+          .select('id,capa_url')
+          .eq('isbn', isbn)
+          .eq('ativo', true)
+          .limit(1)
+          .maybeSingle();
+        if (error) throw error;
+        book = data;
+      }
+
+      if (coverFile instanceof File && coverFile.size && (!book || !book.capa_url)) {
+        uploadedCover = await uploadBookCover(client, coverFile);
+      }
+
+      if (!book) {
+        const payload = {
+          titulo: title,
+          autor: author,
+          isbn: isbn || null,
+          categoria: String(formData.get('categoria') || '').trim() || null,
+          editora: String(formData.get('editora') || '').trim() || null,
+          ano_publicacao: publicationYear,
+          capa_url: uploadedCover.url,
+          criado_por: activeProfile.id
+        };
+        const { data, error } = await client
+          .from('livros')
+          .insert(payload)
+          .select('id,capa_url')
+          .single();
+        if (error) throw error;
+        book = data;
+        createdBookId = book.id;
+      } else if (uploadedCover.url && !book.capa_url) {
+        const { error } = await client
+          .from('livros')
+          .update({ capa_url: uploadedCover.url })
+          .eq('id', book.id);
+        if (error) throw error;
+        updatedExistingCoverId = book.id;
+      }
+
+      const { data: lastCopy, error: lastCopyError } = await client
+        .from('exemplares')
+        .select('numero_exemplar')
+        .eq('livro_id', book.id)
+        .order('numero_exemplar', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (lastCopyError) throw lastCopyError;
+
+      const firstNumber = (Number(lastCopy?.numero_exemplar) || 0) + 1;
+      const codePrefix = book.id.replace(/-/g, '').slice(0, 8).toUpperCase();
+      const copies = Array.from({ length: quantity }, (_, index) => {
+        const copyNumber = firstNumber + index;
+        return {
+          livro_id: book.id,
+          codigo: `BIB-${codePrefix}-${String(copyNumber).padStart(3, '0')}`,
+          numero_exemplar: copyNumber,
+          conservacao: String(formData.get('conservacao') || 'bom'),
+          localizacao: String(formData.get('localizacao') || '').trim() || null,
+          origem: String(formData.get('origem') || '').trim() || null,
+          criado_por: activeProfile.id
+        };
+      });
+
+      const { error: copiesError } = await client.from('exemplares').insert(copies);
+      if (copiesError) throw copiesError;
+
+      clearActivity('cadastro-livro');
+      bookForm.reset();
+      bookFormPanel.hidden = true;
+      await connectDashboard();
+      setBookFormFeedback();
+      showToast(createdBookId
+        ? `Livro cadastrado com ${quantity} exemplar${quantity === 1 ? '' : 'es'}.`
+        : `${quantity} novo${quantity === 1 ? '' : 's'} exemplar${quantity === 1 ? '' : 'es'} adicionado${quantity === 1 ? '' : 's'} ao título existente.`);
+      scrollToContent();
+    } catch (error) {
+      if (createdBookId) await client.from('livros').delete().eq('id', createdBookId);
+      if (updatedExistingCoverId) await client.from('livros').update({ capa_url: null }).eq('id', updatedExistingCoverId);
+      if (uploadedCover.path) await client.storage.from('capas-livros').remove([uploadedCover.path]);
+      console.error('Falha ao cadastrar livro:', error);
+      const message = String(error?.message || '');
+      setBookFormFeedback(message.includes('duplicate key')
+        ? 'Este ISBN já está cadastrado. Atualize o acervo e tente novamente.'
+        : (message || 'Não foi possível salvar o livro. Tente novamente.'));
+    } finally {
+      saveBookButton.disabled = false;
+      saveBookButton.querySelector('span').textContent = 'Salvar no acervo';
+    }
+  }
+
   function leaveApp() {
     removeStorage(NAVIGATION_KEY);
     removeStorage(DRAFTS_KEY);
@@ -382,6 +684,9 @@
   restoreDrafts();
   const savedNavigation = readStorage(NAVIGATION_KEY, { activeView: DEFAULT_VIEW });
   activateView(savedNavigation.activeView || DEFAULT_VIEW, { scroll: false });
+  if (savedNavigation.activeActivity === 'cadastro-livro' && bookFormPanel) {
+    bookFormPanel.hidden = false;
+  }
   forceInitialTop();
 
   passwordToggle?.addEventListener('click', () => {
@@ -450,6 +755,14 @@
     field.addEventListener('change', () => saveField(field));
   });
 
+  openBookForm?.addEventListener('click', openCatalogForm);
+  closeBookForm?.addEventListener('click', () => hideCatalogForm());
+  cancelBookForm?.addEventListener('click', () => hideCatalogForm({ clear: true }));
+  bookForm?.addEventListener('submit', saveBookAndCopies);
+  catalogSearch?.addEventListener('input', renderCatalog);
+  catalogAvailability?.addEventListener('change', renderCatalog);
+  refreshCatalog?.addEventListener('click', () => refreshCompleteCatalog(true));
+
   document.querySelectorAll('[data-module]').forEach((button) => {
     button.addEventListener('click', () => {
       closeSidebar();
@@ -496,8 +809,10 @@
   const search = document.querySelector('.global-search input');
   search?.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' && search.value.trim()) {
-      showToast('A busca será conectada ao acervo na próxima etapa.');
-      scrollToContent();
+      catalogSearch.value = search.value.trim();
+      saveField(catalogSearch);
+      activateView('Acervo');
+      renderCatalog();
     }
   });
 
