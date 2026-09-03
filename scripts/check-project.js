@@ -3,6 +3,7 @@ import { access, readFile } from 'node:fs/promises';
 const requiredFiles = [
   'index.html',
   'styles.css',
+  'auth.css',
   'app.js',
   'config.js',
   'supabase-client.js',
@@ -26,6 +27,7 @@ if (vercelConfig.cleanUrls !== true) {
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 for (const reference of [
   '/styles.css',
+  '/auth.css',
   '/app.js',
   '/config.js',
   '/supabase-client.js',

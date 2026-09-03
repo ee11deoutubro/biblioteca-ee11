@@ -4,8 +4,21 @@
   const NAVIGATION_KEY = 'biblioteca11:navegacao:v1';
   const DRAFTS_KEY = 'biblioteca11:rascunhos:v1';
   const DEFAULT_VIEW = 'Início';
+  const ADMIN_ROLES = new Set(['bibliotecario', 'gestao_escolar']);
 
   const toast = document.getElementById('toast');
+  const authScreen = document.getElementById('authScreen');
+  const adminApp = document.getElementById('adminApp');
+  const loginForm = document.getElementById('loginForm');
+  const loginEmail = document.getElementById('loginEmail');
+  const loginPassword = document.getElementById('loginPassword');
+  const loginButton = document.getElementById('loginButton');
+  const passwordToggle = document.getElementById('passwordToggle');
+  const authMessage = document.getElementById('authMessage');
+  const logoutButton = document.getElementById('logoutButton');
+  const profileInitial = document.getElementById('profileInitial');
+  const profileName = document.getElementById('profileName');
+  const profileRole = document.getElementById('profileRole');
   const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('sidebarOverlay');
   const menuButton = document.getElementById('menuButton');
@@ -77,6 +90,98 @@
     systemStatus.classList.remove('connected', 'offline');
     if (state) systemStatus.classList.add(state);
     systemStatus.lastChild.textContent = ` ${text}`;
+  }
+
+  function setAuthMessage(message = '', state = 'error') {
+    if (!authMessage) return;
+    authMessage.textContent = message;
+    authMessage.classList.toggle('success', state === 'success');
+  }
+
+  function setLoginLoading(isLoading) {
+    if (!loginButton) return;
+    loginButton.disabled = isLoading;
+    loginButton.querySelector('span').textContent = isLoading
+      ? 'Verificando acesso...'
+      : 'Entrar no painel';
+  }
+
+  function friendlyAuthError(error) {
+    const message = String(error?.message || '').toLowerCase();
+    if (message.includes('invalid login credentials')) return 'E-mail ou senha incorretos.';
+    if (message.includes('email not confirmed')) return 'Este e-mail ainda não foi confirmado.';
+    if (message.includes('rate limit')) return 'Muitas tentativas. Aguarde alguns minutos e tente novamente.';
+    return 'Não foi possível entrar agora. Confira os dados e tente novamente.';
+  }
+
+  function showLogin(message = '') {
+    adminApp.hidden = true;
+    authScreen.hidden = false;
+    document.body.classList.add('auth-loading');
+    setAuthMessage(message);
+    forceInitialTop();
+    setTimeout(() => loginEmail?.focus({ preventScroll: true }), 80);
+  }
+
+  function showAdmin(profile) {
+    const roleLabel = profile.tipo === 'gestao_escolar'
+      ? 'Gestão Escolar'
+      : 'Bibliotecário';
+
+    profileName.textContent = profile.nome;
+    profileRole.textContent = roleLabel;
+    profileInitial.textContent = profile.nome.trim().charAt(0).toUpperCase() || 'B';
+    authScreen.hidden = true;
+    adminApp.hidden = false;
+    document.body.classList.remove('auth-loading');
+    setAuthMessage('');
+    forceInitialTop();
+  }
+
+  async function authorizeSession(session) {
+    const client = window.bibliotecaSupabase;
+
+    if (!session?.user || !client) {
+      showLogin();
+      return false;
+    }
+
+    const { data: profile, error } = await client
+      .from('perfis')
+      .select('id,nome,email,tipo,ativo')
+      .eq('id', session.user.id)
+      .maybeSingle();
+
+    if (error || !profile || !profile.ativo || !ADMIN_ROLES.has(profile.tipo)) {
+      await client.auth.signOut();
+      showLogin('Esta conta não possui acesso ao painel administrativo.');
+      return false;
+    }
+
+    showAdmin(profile);
+    await connectDashboard();
+    return true;
+  }
+
+  async function initializeAuthentication() {
+    const client = window.bibliotecaSupabase;
+
+    if (!client) {
+      showLogin(window.bibliotecaSupabaseError || 'Não foi possível conectar ao sistema.');
+      return;
+    }
+
+    const { data, error } = await client.auth.getSession();
+    if (error) {
+      showLogin('Não foi possível recuperar o acesso salvo. Entre novamente.');
+      return;
+    }
+
+    if (data?.session) {
+      await authorizeSession(data.session);
+    } else {
+      showLogin();
+    }
   }
 
   async function loadCompleteCatalog(client) {
@@ -231,6 +336,61 @@
   activateView(savedNavigation.activeView || DEFAULT_VIEW, { scroll: false });
   forceInitialTop();
 
+  passwordToggle?.addEventListener('click', () => {
+    const showing = loginPassword.type === 'text';
+    loginPassword.type = showing ? 'password' : 'text';
+    passwordToggle.textContent = showing ? 'Mostrar' : 'Ocultar';
+    passwordToggle.setAttribute('aria-label', showing ? 'Mostrar senha' : 'Ocultar senha');
+    loginPassword.focus({ preventScroll: true });
+  });
+
+  loginForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const email = loginEmail.value.trim();
+    const password = loginPassword.value;
+
+    if (!email || !password) {
+      setAuthMessage('Preencha o e-mail e a senha.');
+      (!email ? loginEmail : loginPassword).focus();
+      return;
+    }
+
+    const client = window.bibliotecaSupabase;
+    if (!client) {
+      setAuthMessage(window.bibliotecaSupabaseError || 'Conexão indisponível.');
+      return;
+    }
+
+    setLoginLoading(true);
+    setAuthMessage('');
+
+    try {
+      const { data, error } = await client.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      await authorizeSession(data.session);
+      loginPassword.value = '';
+    } catch (error) {
+      setAuthMessage(friendlyAuthError(error));
+      loginPassword.select();
+    } finally {
+      setLoginLoading(false);
+    }
+  });
+
+  logoutButton?.addEventListener('click', async () => {
+    const client = window.bibliotecaSupabase;
+    logoutButton.disabled = true;
+
+    try {
+      await client?.auth.signOut();
+    } finally {
+      leaveApp();
+      loginForm?.reset();
+      showLogin('Acesso encerrado com segurança.');
+      logoutButton.disabled = false;
+    }
+  });
+
   menuButton?.addEventListener('click', () => {
     sidebar?.classList.add('open');
     overlay?.classList.add('show');
@@ -318,6 +478,6 @@
     leave: leaveApp
   });
 
-  connectDashboard();
+  initializeAuthentication();
   fetch('/api/health').catch(() => null);
 })();
