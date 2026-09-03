@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#071c4d" />
   <meta name="description" content="Sistema de gestão da Biblioteca da EE 11 de Outubro" />
-  <meta name="app-version" content="0.5.0" />
+  <meta name="app-version" content="0.5.1" />
   <title>Biblioteca • EE 11 de Outubro</title>
   <script>
     (() => {
@@ -44,8 +44,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/styles.css?v=0.5.0" />
-  <link rel="stylesheet" href="/auth.css?v=0.5.0" />
+  <link rel="stylesheet" href="/styles.css?v=0.5.1" />
+  <link rel="stylesheet" href="/auth.css?v=0.5.1" />
 </head>
 <body class="auth-loading">
   <section class="auth-screen" id="authScreen" aria-labelledby="loginTitle">
@@ -229,9 +229,9 @@
 
       <main class="collection-view" data-view="Acervo" tabindex="-1" hidden>
         <section class="module-heading">
-          <div><p class="date-label">GESTÃO DA BIBLIOTECA</p><h1>Acervo</h1><p>Cadastre cada obra e seus exemplares físicos no mesmo lugar.</p></div>
+          <div><p class="date-label">GESTÃO DA BIBLIOTECA</p><h1>Acervo</h1><p>Consulte os títulos cadastrados e a disponibilidade dos exemplares.</p></div>
           <button class="primary-button" id="openBookForm" type="button">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Novo livro
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Cadastrar novo título
           </button>
         </section>
 
@@ -245,7 +245,7 @@
         </section>
 
         <section class="book-form-panel" id="bookFormPanel" data-activity-panel="cadastro-livro" hidden>
-          <div class="form-panel-heading"><div><span class="section-kicker">CADASTRO ÚNICO</span><h2>Livro e exemplares</h2><p>Informe a obra uma vez e escolha quantos exemplares físicos serão cadastrados.</p></div><button class="icon-close" id="closeBookForm" type="button" aria-label="Fechar cadastro">×</button></div>
+          <div class="form-panel-heading"><div><span class="section-kicker">NOVO CADASTRO</span><h2>Cadastrar título e exemplares</h2><p>Informe os dados do título e quantos exemplares físicos serão cadastrados.</p></div><button class="icon-close" id="closeBookForm" type="button" aria-label="Fechar cadastro">×</button></div>
           <form id="bookForm" novalidate>
             <div class="form-grid">
               <label class="app-field field-wide"><span>Título *</span><input name="titulo" type="text" required maxlength="180" data-persist="livro-titulo" data-activity="cadastro-livro" /></label>
@@ -285,6 +285,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="/config.js"></script>
   <script src="/supabase-client.js"></script>
-  <script src="/app.js?v=0.5.0"></script>
+  <script src="/app.js?v=0.5.1"></script>
 </body>
 </html>

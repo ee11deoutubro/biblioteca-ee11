@@ -44,6 +44,18 @@ for (const reference of [
   }
 }
 
+if (!html.includes('Cadastrar novo título')) {
+  throw new Error('O acesso ao cadastro de título não está identificado corretamente.');
+}
+
+const appScript = await readFile(new URL('../app.js', import.meta.url), 'utf8');
+if (!appScript.includes('sessionStorage.getItem') || !appScript.includes('sessionStorage.setItem')) {
+  throw new Error('A navegação deve permanecer somente durante a sessão aberta do APP.');
+}
+if (/localStorage\.(getItem|setItem)\(key/.test(appScript)) {
+  throw new Error('A navegação não pode permanecer salva após o APP ser fechado.');
+}
+
 const publicConfig = await readFile(new URL('../config.js', import.meta.url), 'utf8');
 if (!publicConfig.includes('sb_publishable_') || !publicConfig.includes('.supabase.co')) {
   throw new Error('A configuração pública do Supabase está incompleta.');

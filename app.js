@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  const NAVIGATION_KEY = 'biblioteca11:navegacao:v1';
-  const DRAFTS_KEY = 'biblioteca11:rascunhos:v1';
+  const NAVIGATION_KEY = 'biblioteca11:navegacao:v2';
+  const DRAFTS_KEY = 'biblioteca11:rascunhos:v2';
   const DEFAULT_VIEW = 'Início';
   const ADMIN_ROLES = new Set(['bibliotecario', 'gestao_escolar']);
 
@@ -53,7 +53,7 @@
 
   function readStorage(key, fallback) {
     try {
-      return JSON.parse(localStorage.getItem(key)) ?? fallback;
+      return JSON.parse(sessionStorage.getItem(key)) ?? fallback;
     } catch {
       return fallback;
     }
@@ -61,7 +61,7 @@
 
   function writeStorage(key, value) {
     try {
-      localStorage.setItem(key, JSON.stringify(value));
+      sessionStorage.setItem(key, JSON.stringify(value));
     } catch {
       // O APP continua funcionando mesmo quando o navegador bloqueia o armazenamento.
     }
@@ -69,7 +69,7 @@
 
   function removeStorage(key) {
     try {
-      localStorage.removeItem(key);
+      sessionStorage.removeItem(key);
     } catch {
       // Sem ação: não deve interromper uma atividade do usuário.
     }
@@ -199,6 +199,14 @@
 
   function showLogin(message = '') {
     activeProfile = null;
+    removeStorage(NAVIGATION_KEY);
+    removeStorage(DRAFTS_KEY);
+    activateView(DEFAULT_VIEW, { scroll: false });
+    removeStorage(NAVIGATION_KEY);
+    if (bookFormPanel) bookFormPanel.hidden = true;
+    bookForm?.reset();
+    if (catalogSearch) catalogSearch.value = '';
+    if (catalogAvailability) catalogAvailability.value = 'todos';
     adminApp.hidden = true;
     authScreen.hidden = false;
     document.body.classList.add('auth-loading');
@@ -220,6 +228,15 @@
     document.body.classList.remove('auth-loading');
     setAuthMessage('');
     lockViewAtTop();
+  }
+
+  function clearLegacyNavigation() {
+    try {
+      localStorage.removeItem('biblioteca11:navegacao:v1');
+      localStorage.removeItem('biblioteca11:rascunhos:v1');
+    } catch {
+      // A migração não deve impedir o acesso quando o armazenamento está bloqueado.
+    }
   }
 
   async function authorizeSession(session) {
@@ -681,6 +698,7 @@
     }).format(new Date()).toUpperCase();
   }
 
+  clearLegacyNavigation();
   restoreDrafts();
   const savedNavigation = readStorage(NAVIGATION_KEY, { activeView: DEFAULT_VIEW });
   activateView(savedNavigation.activeView || DEFAULT_VIEW, { scroll: false });
