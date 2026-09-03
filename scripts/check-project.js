@@ -4,15 +4,18 @@ const requiredFiles = [
   'index.html',
   'styles.css',
   'auth.css',
+  'portal.css',
   'favicon.ico',
   'favicon-32x32.png',
   'apple-touch-icon.png',
   'assets/app-icon.png',
   'assets/og-biblioteca.png',
   'app.js',
+  'portal.js',
   'config.js',
   'supabase-client.js',
   'atualizar-permissoes-gestao.sql',
+  'ativar-reservas-online.sql',
   'vercel.json',
   'api/health.js',
   'assets/logo-escola.png',
@@ -34,11 +37,13 @@ const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 for (const reference of [
   '/styles.css',
   '/auth.css',
+  '/portal.css',
   '/favicon.ico',
   '/apple-touch-icon.png',
   '/assets/app-icon.png',
   '/assets/og-biblioteca.png',
   '/app.js',
+  '/portal.js',
   '/config.js',
   '/supabase-client.js',
   '/assets/logo-escola.png',
@@ -58,6 +63,9 @@ if (!html.includes('property="og:image"') || !html.includes('twitter:card')) {
 if (!html.includes('id="catalogCategories"') || !html.includes('id="editCoverPreview"')) {
   throw new Error('Os filtros por gênero ou a edição de capa estão incompletos.');
 }
+if (!html.includes('id="publicPortal"') || !html.includes('id="reservationModal"')) {
+  throw new Error('O catálogo público ou o fluxo de reserva está incompleto.');
+}
 
 const appScript = await readFile(new URL('../app.js', import.meta.url), 'utf8');
 if (!appScript.includes('sessionStorage.getItem') || !appScript.includes('sessionStorage.setItem')) {
@@ -69,6 +77,26 @@ if (/localStorage\.(getItem|setItem)\(key/.test(appScript)) {
 for (const feature of ['renderCategoryTabs', 'openEditBookForm', 'saveEditedBook']) {
   if (!appScript.includes(feature)) {
     throw new Error(`Recurso do acervo ausente: ${feature}`);
+  }
+}
+
+const portalScript = await readFile(new URL('../portal.js', import.meta.url), 'utf8');
+for (const feature of ['localizar_aluno_por_codigo', 'reservar_livro_por_codigo']) {
+  if (!portalScript.includes(feature)) {
+    throw new Error(`Recurso de reserva pública ausente: ${feature}`);
+  }
+}
+if (!html.includes('Você tem 3 dias para retirar')) {
+  throw new Error('O prazo de retirada não está informado ao aluno.');
+}
+
+const reservationsSql = await readFile(
+  new URL('../ativar-reservas-online.sql', import.meta.url),
+  'utf8'
+);
+for (const feature of ["'{\"dias\": 3}'", 'reservar_livro_por_codigo', 'liberar_solicitacoes_expiradas']) {
+  if (!reservationsSql.includes(feature)) {
+    throw new Error(`Regra de reserva ausente no Supabase: ${feature}`);
   }
 }
 

@@ -6,9 +6,9 @@ MVP online para gestão da biblioteca escolar da EE 11 de Outubro.
 
 - Etapa 1 — identidade visual, painel responsivo e estrutura para Vercel: concluída
 - Etapa 2 — Supabase (banco, cliente, Storage e autenticação administrativa): concluída
-- Etapa 3 — integração com alunos e turmas do Chamada Escolar
-- Etapa 4 — acervo e controle interno de exemplares: em andamento
-- Etapa 5 — empréstimos, devoluções e renovações
+- Etapa 3 — integração com alunos e turmas do Chamada Escolar/SGDE: em andamento
+- Etapa 4 — acervo e controle interno de exemplares: concluída
+- Etapa 5 — reservas online e confirmação de retirada: em andamento
 - Etapa 6 — painel, cobranças e relatórios
 - Etapa 7 — Google Drive e notificações
 
@@ -20,6 +20,8 @@ QR Code e código de barras ficam apenas preparados para uma evolução posterio
 - A seção atual e os campos preenchidos são preservados enquanto a sessão do APP estiver aberta.
 - Ao trocar de seção ou iniciar uma atividade, a tela rola automaticamente para o início do conteúdo.
 - Ao sair ou abrir uma nova sessão do APP, a navegação começa novamente em **Início**.
+- O login administrativo permanece somente enquanto a sessão do navegador estiver aberta;
+  ao fechar e abrir novamente, o aplicativo volta ao catálogo público.
 
 ## Arquitetura definida
 
@@ -53,6 +55,10 @@ administrativo exige autenticação e um perfil ativo do tipo `gestao_escolar`
 ou `bibliotecario`; as permissões de dados continuam protegidas pelo RLS do
 Supabase mesmo que alguém tente acessar as APIs fora da interface.
 
+A página inicial é pública e reúne a consulta do catálogo, os filtros por gênero
+e a reserva de títulos. O login fica separado e é exclusivo para Gestão Escolar
+e Bibliotecário.
+
 Na tela **Acervo**, livro e quantidade de exemplares são cadastrados juntos.
 Quando um ISBN já existe, o sistema adiciona os novos exemplares ao título
 existente, evitando cadastros redundantes. As capas são armazenadas no bucket
@@ -67,10 +73,18 @@ Depois desta atualização, execute uma única vez no SQL Editor do Supabase o
 arquivo `atualizar-permissoes-gestao.sql`. Ele autoriza tanto **Gestão Escolar**
 quanto **Bibliotecário** a administrar o acervo.
 
+Execute também uma única vez o arquivo `ativar-reservas-online.sql`. Ele define
+o prazo de retirada em **3 dias**, habilita a localização exata pelo Código do
+Aluno, registra a reserva, marca reservas vencidas como **Reserva expirada** e
+devolve o exemplar à disponibilidade quando o catálogo ou as solicitações são
+atualizados.
+
 Nos fluxos de empréstimo, o aluno deverá ser localizado pelo **Código do aluno
 no SGDE**. O nome será exibido apenas para conferência, nunca usado como
 identificador principal. Na estrutura atual, esse código oficial é armazenado
 no campo `matricula` da tabela `pessoas` para manter compatibilidade com a base.
+Para o aluno ser localizado, sua turma e seu cadastro precisam estar previamente
+sincronizados nessa tabela a partir da base oficial.
 
 ## Verificação local
 

@@ -5,20 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#071c4d" />
   <meta name="description" content="Sistema de gestão da Biblioteca da EE 11 de Outubro" />
-  <meta name="app-version" content="0.6.1" />
+  <meta name="app-version" content="0.7.0" />
   <meta property="og:locale" content="pt_BR" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Biblioteca 11 • EE 11 de Outubro" />
   <meta property="og:description" content="Sistema de gestão do acervo da EE 11 de Outubro" />
   <meta property="og:url" content="https://biblioteca-ee11.vercel.app/" />
-  <meta property="og:image" content="https://biblioteca-ee11.vercel.app/assets/og-biblioteca.png?v=1" />
+  <meta property="og:image" content="https://biblioteca-ee11.vercel.app/assets/og-biblioteca.png?v=2" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="Biblioteca 11 — Gestão do acervo da EE 11 de Outubro" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Biblioteca 11 • EE 11 de Outubro" />
   <meta name="twitter:description" content="Sistema de gestão do acervo da EE 11 de Outubro" />
-  <meta name="twitter:image" content="https://biblioteca-ee11.vercel.app/assets/og-biblioteca.png?v=1" />
+  <meta name="twitter:image" content="https://biblioteca-ee11.vercel.app/assets/og-biblioteca.png?v=2" />
   <title>Biblioteca • EE 11 de Outubro</title>
   <script>
     (() => {
@@ -51,21 +51,96 @@
       [100, 500, 1200, 2500].forEach((delay) => setTimeout(resetTop, delay));
     })();
   </script>
-  <link rel="icon" href="/favicon.ico?v=4" sizes="any" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=4" />
-  <link rel="icon" type="image/png" sizes="512x512" href="/assets/app-icon.png?v=1" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=4" />
+  <link rel="icon" href="/favicon.ico?v=6" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=6" />
+  <link rel="icon" type="image/png" sizes="512x512" href="/assets/app-icon.png?v=3" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=6" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/styles.css?v=0.6.1" />
-  <link rel="stylesheet" href="/auth.css?v=0.6.1" />
+  <link rel="stylesheet" href="/styles.css?v=0.7.0" />
+  <link rel="stylesheet" href="/auth.css?v=0.7.0" />
+  <link rel="stylesheet" href="/portal.css?v=0.7.0" />
 </head>
-<body class="auth-loading">
-  <section class="auth-screen" id="authScreen" aria-labelledby="loginTitle">
+<body>
+  <section class="public-portal" id="publicPortal" aria-labelledby="publicTitle">
+    <header class="public-header">
+      <a class="public-brand" href="#catalogoPublico" aria-label="Biblioteca 11 — início">
+        <img src="/assets/app-icon.png?v=3" alt="Ícone da Biblioteca 11" />
+        <span><strong>Biblioteca 11</strong><small>EE 11 de Outubro</small></span>
+      </a>
+      <button class="admin-access-button" id="openAdminLogin" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5z"/></svg>
+        Acesso administrativo
+      </button>
+    </header>
+
+    <div class="public-main">
+      <section class="public-intro">
+        <div>
+          <span class="public-kicker">ACERVO DA ESCOLA</span>
+          <h1 id="publicTitle">Encontre sua próxima leitura.</h1>
+          <p>Consulte os títulos disponíveis e faça sua reserva usando o Código do Aluno cadastrado no SGDE.</p>
+        </div>
+        <div class="pickup-rule"><strong>3 dias</strong><span>para retirar sua reserva na biblioteca</span></div>
+      </section>
+
+      <section class="public-catalog" id="catalogoPublico" aria-labelledby="publicCatalogTitle">
+        <div class="public-section-heading">
+          <div><span>CATÁLOGO</span><h2 id="publicCatalogTitle">Livros disponíveis</h2></div>
+          <p id="publicCatalogStatus" role="status" aria-live="polite">Carregando o acervo...</p>
+        </div>
+        <div class="public-tools">
+          <label class="public-search">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+            <input id="publicCatalogSearch" type="search" placeholder="Buscar por título, autor ou gênero" autocomplete="off" />
+          </label>
+          <label class="public-availability"><span>Disponibilidade</span><select id="publicAvailability"><option value="disponiveis">Disponíveis</option><option value="todos">Todos os títulos</option></select></label>
+          <button class="public-refresh" id="publicRefreshCatalog" type="button">Atualizar</button>
+        </div>
+        <nav class="public-category-tabs" id="publicCategories" aria-label="Filtrar catálogo por gênero"></nav>
+        <div class="public-summary"><strong id="publicTitleCount">0</strong><span>títulos encontrados</span><i></i><strong id="publicAvailableCount">0</strong><span>exemplares disponíveis</span></div>
+        <section class="public-book-grid" id="publicCatalogGrid" aria-label="Catálogo de livros"></section>
+        <section class="public-empty" id="publicCatalogEmpty" hidden><h3>Nenhum título encontrado</h3><p>Altere a busca ou o filtro para consultar outros livros.</p></section>
+      </section>
+    </div>
+
+    <footer class="public-footer">EE 11 de Outubro • Biblioteca Escolar</footer>
+  </section>
+
+  <section class="reservation-modal" id="reservationModal" role="dialog" aria-modal="true" aria-labelledby="reservationTitle" hidden>
+    <div class="reservation-backdrop" data-close-reservation></div>
+    <div class="reservation-card">
+      <button class="reservation-close" type="button" data-close-reservation aria-label="Fechar">×</button>
+      <div id="reservationFormStep">
+        <span class="reservation-kicker">RESERVA ONLINE</span>
+        <h2 id="reservationTitle">Reservar este título</h2>
+        <div class="reservation-book" id="reservationBook"></div>
+        <p class="reservation-guidance">Digite seu Código do Aluno. O sistema localizará seu cadastro no SGDE para confirmar a reserva.</p>
+        <form id="studentLookupForm" novalidate>
+          <label class="reservation-field"><span>Código do Aluno</span><input id="studentCode" type="text" inputmode="numeric" autocomplete="off" maxlength="30" placeholder="Digite seu código" required /></label>
+          <button class="lookup-button" id="lookupStudentButton" type="submit">Localizar meu cadastro</button>
+        </form>
+        <div class="student-result" id="studentResult" hidden></div>
+        <p class="reservation-message" id="reservationMessage" role="alert" aria-live="polite"></p>
+        <button class="confirm-reservation-button" id="confirmReservation" type="button" hidden>Confirmar reserva</button>
+      </div>
+      <div class="reservation-success" id="reservationSuccess" hidden>
+        <span class="success-check"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></span>
+        <span class="reservation-kicker">RESERVA REALIZADA</span>
+        <h2>Seu livro está reservado!</h2>
+        <p id="reservationSuccessText"></p>
+        <div class="deadline-card"><strong>Você tem 3 dias para retirar</strong><span id="reservationDeadline"></span></div>
+        <p>Procure a biblioteca da EE 11 de Outubro. Se o livro não for retirado no prazo, a reserva expirará automaticamente.</p>
+        <button class="confirm-reservation-button" type="button" data-close-reservation>Voltar ao catálogo</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="auth-screen" id="authScreen" aria-labelledby="loginTitle" hidden>
     <div class="auth-showcase">
       <div class="auth-brand">
-        <span class="auth-logo"><img src="/assets/logo-escola.png" alt="Logo da EE 11 de Outubro" /></span>
+        <span class="auth-logo"><img src="/assets/app-icon.png?v=3" alt="Ícone da Biblioteca 11" /></span>
         <div><strong>Biblioteca 11</strong><small>EE 11 de Outubro</small></div>
       </div>
       <div class="auth-copy">
@@ -108,6 +183,7 @@
         </form>
 
         <div class="login-help"><span>Problemas para entrar?</span><p>Procure a Gestão Escolar para verificar sua conta.</p></div>
+        <button class="back-to-catalog" id="backToCatalog" type="button">← Voltar ao catálogo público</button>
       </div>
       <p class="auth-footer">Acesso exclusivo para profissionais autorizados • EE 11 de Outubro</p>
     </div>
@@ -116,7 +192,7 @@
   <div class="app-layout" id="adminApp" hidden>
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-brand">
-        <span class="logo-frame"><img src="/assets/logo-escola.png" alt="Logo da EE 11 de Outubro" /></span>
+        <span class="logo-frame"><img src="/assets/app-icon.png?v=3" alt="Ícone da Biblioteca 11" /></span>
         <div><strong>Biblioteca 11</strong><small>EE 11 de Outubro</small></div>
       </div>
 
@@ -286,6 +362,19 @@
         <section class="catalog-grid" id="catalogGrid" aria-label="Livros cadastrados"></section>
         <section class="catalog-empty" id="catalogEmpty" hidden><span class="empty-illustration"><svg viewBox="0 0 64 64"><path d="M17 12h30a4 4 0 0 1 4 4v39H21a8 8 0 0 1-8-8V16a4 4 0 0 1 4-4z"/><path d="M21 12v43m8-31h14m-14 9h14"/></svg></span><h2>Nenhum livro encontrado</h2><p>Cadastre o primeiro livro ou altere os filtros da consulta.</p></section>
       </main>
+
+      <main class="requests-view" data-view="Solicitações" tabindex="-1" hidden>
+        <section class="module-heading">
+          <div><p class="date-label">GESTÃO DA BIBLIOTECA</p><h1>Reservas e solicitações</h1><p>Confirme as retiradas e acompanhe reservas pendentes, concluídas ou expiradas.</p></div>
+          <button class="secondary-button" id="refreshRequests" type="button">Atualizar solicitações</button>
+        </section>
+        <section class="requests-toolbar">
+          <label class="collection-filter"><span>Situação</span><select id="requestStatusFilter"><option value="todos">Todas</option><option value="aguardando_retirada">Aguardando retirada</option><option value="expirada">Reserva expirada</option><option value="retirada_confirmada">Retirada confirmada</option><option value="cancelada">Cancelada</option><option value="recusada">Recusada</option></select></label>
+          <p><strong id="requestCount">0</strong> solicitações encontradas</p>
+        </section>
+        <section class="requests-list" id="requestsList" aria-live="polite"></section>
+        <section class="catalog-empty" id="requestsEmpty" hidden><h2>Nenhuma solicitação encontrada</h2><p>As reservas realizadas no catálogo público aparecerão aqui.</p></section>
+      </main>
     </div>
 
     <nav class="bottom-nav" aria-label="Navegação principal">
@@ -302,6 +391,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="/config.js"></script>
   <script src="/supabase-client.js"></script>
-  <script src="/app.js?v=0.6.1"></script>
+  <script src="/portal.js?v=0.7.0"></script>
+  <script src="/app.js?v=0.7.0"></script>
 </body>
 </html>

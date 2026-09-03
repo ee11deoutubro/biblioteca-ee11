@@ -8,6 +8,7 @@
   const ADMIN_ROLES = new Set(['bibliotecario', 'gestao_escolar']);
 
   const toast = document.getElementById('toast');
+  const publicPortal = document.getElementById('publicPortal');
   const authScreen = document.getElementById('authScreen');
   const adminApp = document.getElementById('adminApp');
   const loginForm = document.getElementById('loginForm');
@@ -52,6 +53,13 @@
   const bookFormTitle = document.getElementById('bookFormTitle');
   const bookFormDescription = document.getElementById('bookFormDescription');
   const editCoverPreview = document.getElementById('editCoverPreview');
+  const refreshRequests = document.getElementById('refreshRequests');
+  const requestStatusFilter = document.getElementById('requestStatusFilter');
+  const requestCount = document.getElementById('requestCount');
+  const requestsList = document.getElementById('requestsList');
+  const requestsEmpty = document.getElementById('requestsEmpty');
+  const openAdminLogin = document.getElementById('openAdminLogin');
+  const backToCatalog = document.getElementById('backToCatalog');
   let toastTimer;
   let releaseTopLock = () => {};
   let activeProfile = null;
@@ -60,6 +68,7 @@
   let editingBookId = null;
   let editingCoverUrl = null;
   let pendingEditBookId = null;
+  let requestsCache = [];
 
   function readStorage(key, fallback) {
     try {
@@ -211,6 +220,17 @@
     return 'Não foi possível entrar agora. Confira os dados e tente novamente.';
   }
 
+  function showPortal(message = '') {
+    activeProfile = null;
+    adminApp.hidden = true;
+    authScreen.hidden = true;
+    publicPortal.hidden = false;
+    document.body.classList.remove('auth-loading');
+    setAuthMessage('');
+    window.BibliotecaPortal?.show(message);
+    lockViewAtTop();
+  }
+
   function showLogin(message = '') {
     activeProfile = null;
     removeStorage(NAVIGATION_KEY);
@@ -226,6 +246,7 @@
     bookForm?.reset();
     if (catalogSearch) catalogSearch.value = '';
     if (catalogAvailability) catalogAvailability.value = 'todos';
+    publicPortal.hidden = true;
     adminApp.hidden = true;
     authScreen.hidden = false;
     document.body.classList.add('auth-loading');
@@ -242,6 +263,7 @@
     profileName.textContent = profile.nome;
     profileRole.textContent = roleLabel;
     profileInitial.textContent = profile.nome.trim().charAt(0).toUpperCase() || 'B';
+    publicPortal.hidden = true;
     authScreen.hidden = true;
     adminApp.hidden = false;
     document.body.classList.remove('auth-loading');
@@ -287,24 +309,31 @@
     const client = window.bibliotecaSupabase;
 
     if (!client) {
-      showLogin(window.bibliotecaSupabaseError || 'Não foi possível conectar ao sistema.');
+      showPortal(window.bibliotecaSupabaseError || 'Não foi possível conectar ao sistema.');
       return;
     }
 
     const { data, error } = await client.auth.getSession();
     if (error) {
-      showLogin('Não foi possível recuperar o acesso salvo. Entre novamente.');
+      showPortal('Não foi possível recuperar o acesso salvo.');
       return;
     }
 
     if (data?.session) {
       await authorizeSession(data.session);
     } else {
-      showLogin();
+      showPortal();
     }
   }
 
   async function loadCompleteCatalog(client) {
+    const { data: refreshedCatalog, error: refreshError } = await client
+      .rpc('consultar_acervo_publico_atualizado');
+
+    if (!refreshError) {
+      return (refreshedCatalog || []).sort((a, b) => a.titulo.localeCompare(b.titulo, 'pt-BR'));
+    }
+
     const pageSize = 1000;
     const catalog = [];
 
@@ -487,9 +516,92 @@
       }
 
       setConnectionStatus('Banco conectado', 'connected');
+      await loadAdminRequests();
     } catch (error) {
       console.error('Falha ao consultar o Supabase:', error);
       setConnectionStatus('Falha na conexão', 'offline');
+    }
+  }
+
+  function requestStatusLabel(status) {
+    return ({
+      aguardando_retirada: 'Aguardando retirada',
+      retirada_confirmada: 'Retirada confirmada',
+      cancelada: 'Cancelada',
+      expirada: 'Reserva expirada',
+      recusada: 'Recusada'
+    })[status] || status;
+  }
+
+  function formatDateTime(value) {
+    if (!value) return '—';
+    return new Intl.DateTimeFormat('pt-BR', {
+      dateStyle: 'short',
+      timeStyle: 'short'
+    }).format(new Date(value));
+  }
+
+  function renderAdminRequests() {
+    if (!requestsList) return;
+    const status = requestStatusFilter?.value || 'todos';
+    const filtered = requestsCache.filter((item) => status === 'todos' || item.status === status);
+    requestCount.textContent = formatNumber(filtered.length);
+    requestsEmpty.hidden = filtered.length > 0;
+    requestsList.hidden = filtered.length === 0;
+    requestsList.innerHTML = filtered.map((item) => {
+      const pending = item.status === 'aguardando_retirada';
+      const code = item.aluno_codigo ? `Código SGDE: ${escapeHtml(item.aluno_codigo)}` : 'Código SGDE não informado';
+      return `<article class="request-card">
+        <div class="request-cover">${item.capa_url ? `<img src="${escapeHtml(item.capa_url)}" alt="" />` : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2zm2 0v16"/></svg>'}</div>
+        <div class="request-main"><span class="request-badge status-${escapeHtml(item.status)}">${escapeHtml(requestStatusLabel(item.status))}</span><h2>${escapeHtml(item.titulo)}</h2><p>${escapeHtml(item.autor)}</p><div class="request-student"><strong>${escapeHtml(item.aluno_nome)}</strong><span>${code}${item.turma ? ` • ${escapeHtml(item.turma)}` : ''}</span></div></div>
+        <div class="request-deadline"><small>Solicitada em</small><strong>${formatDateTime(item.solicitado_em)}</strong><small>${pending ? 'Retirar até' : 'Prazo da reserva'}</small><strong class="${item.status === 'expirada' ? 'expired' : ''}">${formatDateTime(item.reservado_ate)}</strong>${pending ? `<button class="confirm-pickup-button" type="button" data-confirm-pickup="${escapeHtml(item.id)}">Confirmar retirada</button>` : ''}</div>
+      </article>`;
+    }).join('');
+  }
+
+  async function loadAdminRequests(showLoading = false) {
+    const client = window.bibliotecaSupabase;
+    if (!client || !activeProfile || !requestsList) return;
+    if (showLoading) {
+      refreshRequests.disabled = true;
+      refreshRequests.textContent = 'Atualizando...';
+    }
+    try {
+      const { data, error } = await client.rpc('listar_solicitacoes_administracao');
+      if (error) throw error;
+      requestsCache = data || [];
+      renderAdminRequests();
+      document.querySelectorAll('.nav-count').forEach((badge) => {
+        badge.textContent = formatNumber(requestsCache.filter((item) => item.status === 'aguardando_retirada').length);
+      });
+    } catch (error) {
+      console.error('Falha ao carregar solicitações:', error);
+      requestsList.innerHTML = '<div class="catalog-empty"><h2>Atualização do Supabase pendente</h2><p>Execute o arquivo ativar-reservas-online.sql para habilitar as reservas.</p></div>';
+      requestsList.hidden = false;
+      requestsEmpty.hidden = true;
+    } finally {
+      if (refreshRequests) {
+        refreshRequests.disabled = false;
+        refreshRequests.textContent = 'Atualizar solicitações';
+      }
+    }
+  }
+
+  async function confirmPickup(requestId, button) {
+    const client = window.bibliotecaSupabase;
+    if (!client || !requestId) return;
+    button.disabled = true;
+    button.textContent = 'Confirmando...';
+    try {
+      const { error } = await client.rpc('confirmar_retirada', { p_solicitacao_id: requestId });
+      if (error) throw error;
+      showToast('Retirada confirmada. O livro agora consta como emprestado.');
+      await connectDashboard();
+    } catch (error) {
+      console.error('Falha ao confirmar retirada:', error);
+      showToast(error?.message || 'Não foi possível confirmar a retirada.');
+      button.disabled = false;
+      button.textContent = 'Confirmar retirada';
     }
   }
 
@@ -529,6 +641,7 @@
 
     if (options.scroll !== false) scrollToContent(options.behavior || 'smooth');
     if (selectedName === 'Acervo' && window.bibliotecaSupabase) refreshCompleteCatalog();
+    if (selectedName === 'Solicitações' && window.bibliotecaSupabase) loadAdminRequests();
     return Boolean(requestedView);
   }
 
@@ -974,6 +1087,9 @@
     loginPassword.focus({ preventScroll: true });
   });
 
+  openAdminLogin?.addEventListener('click', () => showLogin());
+  backToCatalog?.addEventListener('click', () => showPortal());
+
   loginForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const email = loginEmail.value.trim();
@@ -1016,7 +1132,7 @@
     } finally {
       leaveApp();
       loginForm?.reset();
-      showLogin('Acesso encerrado com segurança.');
+      showPortal('Acesso administrativo encerrado com segurança.');
       logoutButton.disabled = false;
     }
   });
@@ -1039,6 +1155,13 @@
   catalogSearch?.addEventListener('input', renderCatalog);
   catalogAvailability?.addEventListener('change', renderCatalog);
   refreshCatalog?.addEventListener('click', () => refreshCompleteCatalog(true));
+  refreshRequests?.addEventListener('click', () => loadAdminRequests(true));
+  requestStatusFilter?.addEventListener('change', renderAdminRequests);
+  requestsList?.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-confirm-pickup]');
+    if (!button) return;
+    confirmPickup(button.dataset.confirmPickup, button);
+  });
   catalogCategories?.addEventListener('click', (event) => {
     const button = event.target.closest('[data-category]');
     if (!button) return;
