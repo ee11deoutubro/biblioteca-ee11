@@ -10,6 +10,7 @@ const requiredFiles = [
   'app.js',
   'config.js',
   'supabase-client.js',
+  'atualizar-permissoes-gestao.sql',
   'vercel.json',
   'api/health.js',
   'assets/logo-escola.png',
@@ -47,6 +48,9 @@ for (const reference of [
 if (!html.includes('Cadastrar novo título')) {
   throw new Error('O acesso ao cadastro de título não está identificado corretamente.');
 }
+if (!html.includes('id="catalogCategories"') || !html.includes('id="editCoverPreview"')) {
+  throw new Error('Os filtros por gênero ou a edição de capa estão incompletos.');
+}
 
 const appScript = await readFile(new URL('../app.js', import.meta.url), 'utf8');
 if (!appScript.includes('sessionStorage.getItem') || !appScript.includes('sessionStorage.setItem')) {
@@ -54,6 +58,19 @@ if (!appScript.includes('sessionStorage.getItem') || !appScript.includes('sessio
 }
 if (/localStorage\.(getItem|setItem)\(key/.test(appScript)) {
   throw new Error('A navegação não pode permanecer salva após o APP ser fechado.');
+}
+for (const feature of ['renderCategoryTabs', 'openEditBookForm', 'saveEditedBook']) {
+  if (!appScript.includes(feature)) {
+    throw new Error(`Recurso do acervo ausente: ${feature}`);
+  }
+}
+
+const permissionsSql = await readFile(
+  new URL('../atualizar-permissoes-gestao.sql', import.meta.url),
+  'utf8'
+);
+if (!permissionsSql.includes("tipo in ('bibliotecario', 'gestao_escolar')")) {
+  throw new Error('A Gestão Escolar precisa ter permissão para editar o acervo.');
 }
 
 const publicConfig = await readFile(new URL('../config.js', import.meta.url), 'utf8');

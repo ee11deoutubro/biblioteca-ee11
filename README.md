@@ -17,9 +17,9 @@ QR Code e código de barras ficam apenas preparados para uma evolução posterio
 ## Comportamento de navegação
 
 - A primeira visualização sempre começa no topo da página.
-- A seção atual e os campos marcados para persistência são preservados localmente.
+- A seção atual e os campos preenchidos são preservados enquanto a sessão do APP estiver aberta.
 - Ao trocar de seção ou iniciar uma atividade, a tela rola automaticamente para o início do conteúdo.
-- O estado da atividade só é limpo quando ela for finalizada, cancelada ou quando o usuário sair.
+- Ao sair ou abrir uma nova sessão do APP, a navegação começa novamente em **Início**.
 
 ## Arquitetura definida
 
@@ -56,6 +56,15 @@ Na tela **Acervo**, livro e quantidade de exemplares são cadastrados juntos.
 Quando um ISBN já existe, o sistema adiciona os novos exemplares ao título
 existente, evitando cadastros redundantes. As capas são armazenadas no bucket
 `capas-livros` e cada exemplar recebe um código interno único.
+
+Os títulos podem ser pesquisados, filtrados por disponibilidade e separados
+pelas abas de gênero/categoria geradas automaticamente. A ação **Editar** permite
+alterar os dados do título e enviar ou substituir sua capa sem modificar os
+exemplares já cadastrados.
+
+Depois desta atualização, execute uma única vez no SQL Editor do Supabase o
+arquivo `atualizar-permissoes-gestao.sql`. Ele autoriza tanto **Gestão Escolar**
+quanto **Bibliotecário** a administrar o acervo.
 
 ## Verificação local
 

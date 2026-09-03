@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#071c4d" />
   <meta name="description" content="Sistema de gestão da Biblioteca da EE 11 de Outubro" />
-  <meta name="app-version" content="0.5.1" />
+  <meta name="app-version" content="0.6.0" />
   <title>Biblioteca • EE 11 de Outubro</title>
   <script>
     (() => {
@@ -44,8 +44,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/styles.css?v=0.5.1" />
-  <link rel="stylesheet" href="/auth.css?v=0.5.1" />
+  <link rel="stylesheet" href="/styles.css?v=0.6.0" />
+  <link rel="stylesheet" href="/auth.css?v=0.6.0" />
 </head>
 <body class="auth-loading">
   <section class="auth-screen" id="authScreen" aria-labelledby="loginTitle">
@@ -244,8 +244,10 @@
           <button class="secondary-button" id="refreshCatalog" type="button">Atualizar</button>
         </section>
 
+        <nav class="category-tabs" id="catalogCategories" aria-label="Filtrar títulos por gênero"></nav>
+
         <section class="book-form-panel" id="bookFormPanel" data-activity-panel="cadastro-livro" hidden>
-          <div class="form-panel-heading"><div><span class="section-kicker">NOVO CADASTRO</span><h2>Cadastrar título e exemplares</h2><p>Informe os dados do título e quantos exemplares físicos serão cadastrados.</p></div><button class="icon-close" id="closeBookForm" type="button" aria-label="Fechar cadastro">×</button></div>
+          <div class="form-panel-heading"><div><span class="section-kicker" id="bookFormKicker">NOVO CADASTRO</span><h2 id="bookFormTitle">Cadastrar título e exemplares</h2><p id="bookFormDescription">Informe os dados do título e quantos exemplares físicos serão cadastrados.</p></div><button class="icon-close" id="closeBookForm" type="button" aria-label="Fechar cadastro">×</button></div>
           <form id="bookForm" novalidate>
             <div class="form-grid">
               <label class="app-field field-wide"><span>Título *</span><input name="titulo" type="text" required maxlength="180" data-persist="livro-titulo" data-activity="cadastro-livro" /></label>
@@ -254,11 +256,12 @@
               <label class="app-field"><span>Categoria</span><input name="categoria" type="text" maxlength="80" placeholder="Ex.: Literatura brasileira" data-persist="livro-categoria" data-activity="cadastro-livro" /></label>
               <label class="app-field"><span>Editora</span><input name="editora" type="text" maxlength="100" data-persist="livro-editora" data-activity="cadastro-livro" /></label>
               <label class="app-field"><span>Ano de publicação</span><input name="ano_publicacao" type="number" min="1000" max="2200" inputmode="numeric" data-persist="livro-ano" data-activity="cadastro-livro" /></label>
-              <label class="app-field"><span>Quantidade de exemplares *</span><input name="quantidade" type="number" min="1" max="100" value="1" inputmode="numeric" required data-persist="livro-quantidade" data-activity="cadastro-livro" /></label>
-              <label class="app-field"><span>Localização</span><input name="localizacao" type="text" maxlength="80" placeholder="Ex.: Estante A3" data-persist="livro-localizacao" data-activity="cadastro-livro" /></label>
-              <label class="app-field"><span>Estado de conservação</span><select name="conservacao" data-persist="livro-conservacao" data-activity="cadastro-livro"><option value="novo">Novo</option><option value="otimo">Ótimo</option><option value="bom" selected>Bom</option><option value="regular">Regular</option><option value="danificado">Danificado</option></select></label>
-              <label class="app-field"><span>Origem</span><select name="origem" data-persist="livro-origem" data-activity="cadastro-livro"><option value="">Não informado</option><option value="Compra">Compra</option><option value="Doação">Doação</option><option value="PNLD">PNLD</option><option value="Outro">Outro</option></select></label>
+              <label class="app-field" data-create-only><span>Quantidade de exemplares *</span><input name="quantidade" type="number" min="1" max="100" value="1" inputmode="numeric" required data-persist="livro-quantidade" data-activity="cadastro-livro" /></label>
+              <label class="app-field" data-create-only><span>Localização</span><input name="localizacao" type="text" maxlength="80" placeholder="Ex.: Estante A3" data-persist="livro-localizacao" data-activity="cadastro-livro" /></label>
+              <label class="app-field" data-create-only><span>Estado de conservação</span><select name="conservacao" data-persist="livro-conservacao" data-activity="cadastro-livro"><option value="novo">Novo</option><option value="otimo">Ótimo</option><option value="bom" selected>Bom</option><option value="regular">Regular</option><option value="danificado">Danificado</option></select></label>
+              <label class="app-field" data-create-only><span>Origem</span><select name="origem" data-persist="livro-origem" data-activity="cadastro-livro"><option value="">Não informado</option><option value="Compra">Compra</option><option value="Doação">Doação</option><option value="PNLD">PNLD</option><option value="Outro">Outro</option></select></label>
               <label class="app-field field-wide"><span>Capa do livro</span><input name="capa" type="file" accept="image/jpeg,image/png,image/webp" /><small>JPG, PNG ou WebP, com até 5 MB.</small></label>
+              <div class="edit-cover-preview field-wide" id="editCoverPreview" hidden></div>
             </div>
             <p class="form-feedback" id="bookFormFeedback" role="alert" aria-live="polite"></p>
             <div class="form-actions"><button class="secondary-button" id="cancelBookForm" type="button">Cancelar</button><button class="primary-button" id="saveBookButton" type="submit"><span>Salvar no acervo</span></button></div>
@@ -285,6 +288,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="/config.js"></script>
   <script src="/supabase-client.js"></script>
-  <script src="/app.js?v=0.5.1"></script>
+  <script src="/app.js?v=0.6.0"></script>
 </body>
 </html>

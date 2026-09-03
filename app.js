@@ -3,6 +3,7 @@
 
   const NAVIGATION_KEY = 'biblioteca11:navegacao:v2';
   const DRAFTS_KEY = 'biblioteca11:rascunhos:v2';
+  const CATEGORY_KEY = 'biblioteca11:categoria-acervo:v1';
   const DEFAULT_VIEW = 'Início';
   const ADMIN_ROLES = new Set(['bibliotecario', 'gestao_escolar']);
 
@@ -39,6 +40,7 @@
   const catalogCopies = document.getElementById('catalogCopies');
   const catalogAvailable = document.getElementById('catalogAvailable');
   const refreshCatalog = document.getElementById('refreshCatalog');
+  const catalogCategories = document.getElementById('catalogCategories');
   const bookFormPanel = document.getElementById('bookFormPanel');
   const bookForm = document.getElementById('bookForm');
   const openBookForm = document.getElementById('openBookForm');
@@ -46,10 +48,18 @@
   const cancelBookForm = document.getElementById('cancelBookForm');
   const saveBookButton = document.getElementById('saveBookButton');
   const bookFormFeedback = document.getElementById('bookFormFeedback');
+  const bookFormKicker = document.getElementById('bookFormKicker');
+  const bookFormTitle = document.getElementById('bookFormTitle');
+  const bookFormDescription = document.getElementById('bookFormDescription');
+  const editCoverPreview = document.getElementById('editCoverPreview');
   let toastTimer;
   let releaseTopLock = () => {};
   let activeProfile = null;
   let catalogCache = [];
+  let selectedCategory = readStorage(CATEGORY_KEY, 'todos');
+  let editingBookId = null;
+  let editingCoverUrl = null;
+  let pendingEditBookId = null;
 
   function readStorage(key, fallback) {
     try {
@@ -73,6 +83,10 @@
     } catch {
       // Sem ação: não deve interromper uma atividade do usuário.
     }
+  }
+
+  function categoryKey(value) {
+    return value ? normalizeSearch(value) : '__sem_categoria__';
   }
 
   function showToast(message) {
@@ -201,6 +215,11 @@
     activeProfile = null;
     removeStorage(NAVIGATION_KEY);
     removeStorage(DRAFTS_KEY);
+    removeStorage(CATEGORY_KEY);
+    selectedCategory = 'todos';
+    editingBookId = null;
+    editingCoverUrl = null;
+    pendingEditBookId = null;
     activateView(DEFAULT_VIEW, { scroll: false });
     removeStorage(NAVIGATION_KEY);
     if (bookFormPanel) bookFormPanel.hidden = true;
@@ -304,6 +323,43 @@
     return catalog;
   }
 
+  function renderCategoryTabs() {
+    if (!catalogCategories) return;
+
+    const categories = new Map();
+    catalogCache.forEach((book) => {
+      const key = categoryKey(book.categoria);
+      const current = categories.get(key);
+      categories.set(key, {
+        label: book.categoria?.trim() || 'Sem categoria',
+        count: (current?.count || 0) + 1
+      });
+    });
+
+    if (selectedCategory !== 'todos' && !categories.has(selectedCategory)) {
+      selectedCategory = 'todos';
+      writeStorage(CATEGORY_KEY, selectedCategory);
+    }
+
+    const options = [
+      { key: 'todos', label: 'Todos', count: catalogCache.length },
+      ...[...categories.entries()]
+        .map(([key, value]) => ({ key, ...value }))
+        .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'))
+    ];
+
+    catalogCategories.replaceChildren(...options.map((option) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'category-tab';
+      button.dataset.category = option.key;
+      button.classList.toggle('active', option.key === selectedCategory);
+      button.setAttribute('aria-pressed', String(option.key === selectedCategory));
+      button.textContent = `${option.label} (${formatNumber(option.count)})`;
+      return button;
+    }));
+  }
+
   function renderCatalog() {
     if (!catalogGrid) return;
 
@@ -318,11 +374,13 @@
         book.editora
       ].filter(Boolean).join(' '));
       const matchesQuery = !query || searchable.includes(query);
+      const matchesCategory = selectedCategory === 'todos'
+        || categoryKey(book.categoria) === selectedCategory;
       const availableCopies = Number(book.disponiveis) || 0;
       const matchesAvailability = availability === 'todos'
         || (availability === 'disponiveis' && availableCopies > 0)
         || (availability === 'indisponiveis' && availableCopies === 0);
-      return matchesQuery && matchesAvailability;
+      return matchesQuery && matchesCategory && matchesAvailability;
     });
 
     const totals = filtered.reduce((summary, book) => {
@@ -351,7 +409,13 @@
       return `<article class="catalog-card" data-book-id="${escapeHtml(book.id)}">
         <div class="book-cover">${cover}</div>
         <div class="catalog-card-content">
-          <h2 title="${escapeHtml(book.titulo)}">${escapeHtml(book.titulo)}</h2>
+          <div class="catalog-title-row">
+            <h2 title="${escapeHtml(book.titulo)}">${escapeHtml(book.titulo)}</h2>
+            <button class="edit-book-button" type="button" data-edit-book="${escapeHtml(book.id)}" aria-label="Editar ${escapeHtml(book.titulo)}">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10.9-10.9a2.1 2.1 0 0 0-3-3L5.2 16zM14.8 6.2l3 3"/></svg>
+              Editar
+            </button>
+          </div>
           <p class="catalog-author">${escapeHtml(book.autor)}</p>
           <div class="catalog-meta">${metadata || '<span>Sem categoria</span>'}</div>
           <div class="availability-line"><strong class="${available ? '' : 'unavailable'}">${available ? `${available} disponível${available === 1 ? '' : 'is'}` : 'Indisponível'}</strong><span>${total} exemplar${total === 1 ? '' : 'es'}</span></div>
@@ -369,7 +433,9 @@
     }
     try {
       catalogCache = await loadCompleteCatalog(client);
+      renderCategoryTabs();
       renderCatalog();
+      resumePendingEdit();
     } catch (error) {
       console.error('Falha ao carregar o acervo:', error);
       showToast('Não foi possível atualizar o acervo.');
@@ -392,7 +458,9 @@
     try {
       const catalog = await loadCompleteCatalog(client);
       catalogCache = catalog;
+      renderCategoryTabs();
       renderCatalog();
+      resumePendingEdit();
       const totals = catalog.reduce((summary, book) => {
         summary.copies += Number(book.total_exemplares) || 0;
         summary.available += Number(book.disponiveis) || 0;
@@ -448,10 +516,15 @@
     });
 
     const selectedName = selectedView.dataset.view || DEFAULT_VIEW;
+    const currentNavigation = readStorage(NAVIGATION_KEY, {});
+    const keepsCurrentActivity = currentNavigation.activeView === selectedName
+      && !Object.prototype.hasOwnProperty.call(options, 'activity');
     updateActiveNavigation(selectedName);
     writeStorage(NAVIGATION_KEY, {
       activeView: selectedName,
-      activeActivity: options.activity || null
+      activeActivity: keepsCurrentActivity
+        ? (currentNavigation.activeActivity || null)
+        : (options.activity || null)
     });
 
     if (options.scroll !== false) scrollToContent(options.behavior || 'smooth');
@@ -505,8 +578,64 @@
     bookFormFeedback.classList.toggle('success', success);
   }
 
+  function setBookFormMode(mode, book = null) {
+    const isEditing = mode === 'edit' && book;
+    editingBookId = isEditing ? book.id : null;
+    editingCoverUrl = isEditing ? (book.capa_url || null) : null;
+
+    bookFormKicker.textContent = isEditing ? 'EDITAR TÍTULO' : 'NOVO CADASTRO';
+    bookFormTitle.textContent = isEditing ? 'Editar informações do título' : 'Cadastrar título e exemplares';
+    bookFormDescription.textContent = isEditing
+      ? 'Altere os dados do título ou selecione uma nova imagem para substituir a capa.'
+      : 'Informe os dados do título e quantos exemplares físicos serão cadastrados.';
+    saveBookButton.querySelector('span').textContent = isEditing ? 'Salvar alterações' : 'Salvar no acervo';
+
+    document.querySelectorAll('[data-create-only]').forEach((field) => {
+      field.hidden = Boolean(isEditing);
+    });
+    const quantityField = bookForm?.elements.namedItem('quantidade');
+    if (quantityField) quantityField.required = !isEditing;
+
+    if (editCoverPreview) {
+      editCoverPreview.replaceChildren();
+      editCoverPreview.hidden = !isEditing;
+      if (isEditing) {
+        const label = document.createElement('span');
+        label.textContent = editingCoverUrl ? 'Capa atual' : 'Este título ainda não possui capa';
+        editCoverPreview.append(label);
+        if (editingCoverUrl) {
+          const image = document.createElement('img');
+          image.src = editingCoverUrl;
+          image.alt = `Capa atual de ${book.titulo}`;
+          editCoverPreview.prepend(image);
+        }
+      }
+    }
+  }
+
+  function populateBookForm(book) {
+    if (!bookForm || !book) return;
+    bookForm.reset();
+    const values = {
+      titulo: book.titulo,
+      autor: book.autor,
+      isbn: book.isbn,
+      categoria: book.categoria,
+      editora: book.editora,
+      ano_publicacao: book.ano_publicacao
+    };
+    Object.entries(values).forEach(([name, value]) => {
+      const field = bookForm.elements.namedItem(name);
+      if (field) field.value = value ?? '';
+    });
+    bookForm.querySelectorAll('[data-persist]').forEach(saveField);
+  }
+
   function openCatalogForm() {
     if (!bookFormPanel) return;
+    clearActivity('cadastro-livro');
+    bookForm?.reset();
+    setBookFormMode('create');
     bookFormPanel.hidden = false;
     writeStorage(NAVIGATION_KEY, {
       activeView: 'Acervo',
@@ -517,6 +646,39 @@
     bookForm?.elements.namedItem('titulo')?.focus({ preventScroll: true });
   }
 
+  function openEditBookForm(bookId, options = {}) {
+    const book = catalogCache.find((item) => item.id === bookId);
+    if (!book || !bookFormPanel) {
+      showToast('Não foi possível localizar este título.');
+      return;
+    }
+
+    if (!options.preserveDraft) {
+      clearActivity('cadastro-livro');
+      populateBookForm(book);
+    } else if (!bookForm?.elements.namedItem('titulo')?.value) {
+      populateBookForm(book);
+    }
+    setBookFormMode('edit', book);
+    bookFormPanel.hidden = false;
+    writeStorage(NAVIGATION_KEY, {
+      activeView: 'Acervo',
+      activeActivity: `editar-livro:${book.id}`
+    });
+    setBookFormFeedback();
+    if (options.scroll !== false) {
+      bookFormPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      bookForm?.elements.namedItem('titulo')?.focus({ preventScroll: true });
+    }
+  }
+
+  function resumePendingEdit() {
+    if (!pendingEditBookId) return;
+    const bookId = pendingEditBookId;
+    pendingEditBookId = null;
+    openEditBookForm(bookId, { preserveDraft: true, scroll: false });
+  }
+
   function hideCatalogForm({ clear = false } = {}) {
     if (clear) {
       clearActivity('cadastro-livro');
@@ -524,6 +686,8 @@
       setBookFormFeedback();
     }
     if (bookFormPanel) bookFormPanel.hidden = true;
+    editingBookId = null;
+    editingCoverUrl = null;
     if (!clear) {
       const state = readStorage(NAVIGATION_KEY, {});
       writeStorage(NAVIGATION_KEY, { ...state, activeActivity: null });
@@ -550,6 +714,91 @@
     return { url: data.publicUrl, path };
   }
 
+  function coverStoragePath(url) {
+    const marker = '/storage/v1/object/public/capas-livros/';
+    const position = String(url || '').indexOf(marker);
+    if (position < 0) return null;
+    try {
+      return decodeURIComponent(String(url).slice(position + marker.length));
+    } catch {
+      return null;
+    }
+  }
+
+  async function saveEditedBook(client) {
+    const book = catalogCache.find((item) => item.id === editingBookId);
+    if (!book || !bookForm) {
+      setBookFormFeedback('Não foi possível localizar o título para edição.');
+      return;
+    }
+
+    const formData = new FormData(bookForm);
+    const title = String(formData.get('titulo') || '').trim();
+    const author = String(formData.get('autor') || '').trim();
+    const isbn = String(formData.get('isbn') || '').replace(/[^0-9Xx]/g, '').toUpperCase();
+    const publicationYear = Number(formData.get('ano_publicacao')) || null;
+    const coverFile = formData.get('capa');
+
+    if (!title || !author) {
+      setBookFormFeedback('Preencha o título e o autor.');
+      (!title ? bookForm.elements.namedItem('titulo') : bookForm.elements.namedItem('autor'))?.focus();
+      return;
+    }
+
+    saveBookButton.disabled = true;
+    saveBookButton.querySelector('span').textContent = 'Salvando alterações...';
+    setBookFormFeedback('Atualizando as informações do título...', true);
+
+    let uploadedCover = { url: null, path: null };
+    try {
+      if (coverFile instanceof File && coverFile.size) {
+        uploadedCover = await uploadBookCover(client, coverFile);
+      }
+
+      const payload = {
+        titulo: title,
+        autor: author,
+        isbn: isbn || null,
+        categoria: String(formData.get('categoria') || '').trim() || null,
+        editora: String(formData.get('editora') || '').trim() || null,
+        ano_publicacao: publicationYear
+      };
+      if (uploadedCover.url) payload.capa_url = uploadedCover.url;
+
+      const { error } = await client
+        .from('livros')
+        .update(payload)
+        .eq('id', book.id);
+      if (error) throw error;
+
+      if (uploadedCover.url && editingCoverUrl) {
+        const oldPath = coverStoragePath(editingCoverUrl);
+        if (oldPath) await client.storage.from('capas-livros').remove([oldPath]);
+      }
+
+      clearActivity('cadastro-livro');
+      bookForm.reset();
+      bookFormPanel.hidden = true;
+      editingBookId = null;
+      editingCoverUrl = null;
+      setBookFormMode('create');
+      await connectDashboard();
+      setBookFormFeedback();
+      showToast('Informações do título atualizadas.');
+      scrollToContent();
+    } catch (error) {
+      if (uploadedCover.path) await client.storage.from('capas-livros').remove([uploadedCover.path]);
+      console.error('Falha ao editar título:', error);
+      const message = String(error?.message || '');
+      setBookFormFeedback(message.includes('duplicate key')
+        ? 'Este ISBN já pertence a outro título.'
+        : (message || 'Não foi possível atualizar o título. Tente novamente.'));
+    } finally {
+      saveBookButton.disabled = false;
+      saveBookButton.querySelector('span').textContent = editingBookId ? 'Salvar alterações' : 'Salvar no acervo';
+    }
+  }
+
   async function saveBookAndCopies(event) {
     event.preventDefault();
     if (!bookForm || !activeProfile) return;
@@ -557,6 +806,11 @@
     const client = window.bibliotecaSupabase;
     if (!client) {
       setBookFormFeedback('Não foi possível conectar ao banco.');
+      return;
+    }
+
+    if (editingBookId) {
+      await saveEditedBook(client);
       return;
     }
 
@@ -687,6 +941,8 @@
   function leaveApp() {
     removeStorage(NAVIGATION_KEY);
     removeStorage(DRAFTS_KEY);
+    removeStorage(CATEGORY_KEY);
+    selectedCategory = 'todos';
     forceInitialTop();
   }
 
@@ -703,7 +959,10 @@
   const savedNavigation = readStorage(NAVIGATION_KEY, { activeView: DEFAULT_VIEW });
   activateView(savedNavigation.activeView || DEFAULT_VIEW, { scroll: false });
   if (savedNavigation.activeActivity === 'cadastro-livro' && bookFormPanel) {
+    setBookFormMode('create');
     bookFormPanel.hidden = false;
+  } else if (String(savedNavigation.activeActivity || '').startsWith('editar-livro:')) {
+    pendingEditBookId = String(savedNavigation.activeActivity).slice('editar-livro:'.length);
   }
   forceInitialTop();
 
@@ -780,6 +1039,19 @@
   catalogSearch?.addEventListener('input', renderCatalog);
   catalogAvailability?.addEventListener('change', renderCatalog);
   refreshCatalog?.addEventListener('click', () => refreshCompleteCatalog(true));
+  catalogCategories?.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-category]');
+    if (!button) return;
+    selectedCategory = button.dataset.category || 'todos';
+    writeStorage(CATEGORY_KEY, selectedCategory);
+    renderCategoryTabs();
+    renderCatalog();
+  });
+  catalogGrid?.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-edit-book]');
+    if (!button) return;
+    openEditBookForm(button.dataset.editBook);
+  });
 
   document.querySelectorAll('[data-module]').forEach((button) => {
     button.addEventListener('click', () => {
