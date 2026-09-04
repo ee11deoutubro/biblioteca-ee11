@@ -1,6 +1,8 @@
-# Biblioteca EE 11 de Outubro — versão 0.9.0
+# Biblioteca EE 11 de Outubro — versão 0.9.2
 
-Esta versão aplica o novo portal público responsivo, com ilustração de leitura integrada ao fundo, transição contínua em degradê, menu móvel e navegação inferior no celular.
+Esta versão usa integralmente os layouts finais aprovados para desktop e celular, sem redesenhar ou aplicar filtros às artes. As áreas de navegação foram adicionadas sobre o layout para manter o APP funcional.
+
+No celular, o menu superior foi removido por ser redundante com os cartões centrais e a barra de navegação inferior.
 
 MVP online para gestão da biblioteca escolar da EE 11 de Outubro.
 

@@ -4,8 +4,6 @@
   const portal = document.getElementById('publicPortal');
   const publicViews = [...document.querySelectorAll('[data-public-view]')];
   const publicNavigation = [...document.querySelectorAll('[data-public-nav]')];
-  const publicMenuButton = document.getElementById('publicMenuButton');
-  const publicMenu = document.querySelector('.public-nav');
   const search = document.getElementById('publicCatalogSearch');
   const availability = document.getElementById('publicAvailability');
   const refreshButton = document.getElementById('publicRefreshCatalog');
@@ -91,6 +89,7 @@
     const requestedView = publicViews.some((view) => view.dataset.publicView === viewName)
       ? viewName
       : 'inicio';
+    if (portal) portal.dataset.activeView = requestedView;
     publicViews.forEach((view) => { view.hidden = view.dataset.publicView !== requestedView; });
     publicNavigation.forEach((button) => {
       const active = button.dataset.publicNav === requestedView;
@@ -98,8 +97,6 @@
       if (active) button.setAttribute('aria-current', 'page');
       else button.removeAttribute('aria-current');
     });
-    publicMenu?.classList.remove('open');
-    publicMenuButton?.setAttribute('aria-expanded', 'false');
     if (requestedView === 'catalogo' && !catalog.length) loadCatalog();
     if (!options.preserveScroll) window.scrollTo({ top: 0, behavior: options.instant ? 'auto' : 'smooth' });
   }
@@ -351,10 +348,6 @@
 
   publicNavigation.forEach((button) => {
     button.addEventListener('click', () => activatePublicView(button.dataset.publicNav));
-  });
-  publicMenuButton?.addEventListener('click', () => {
-    const isOpen = publicMenu?.classList.toggle('open') || false;
-    publicMenuButton.setAttribute('aria-expanded', String(isOpen));
   });
   document.querySelectorAll('[data-open-admin]').forEach((button) => {
     button.addEventListener('click', () => document.getElementById('openAdminLogin')?.click());

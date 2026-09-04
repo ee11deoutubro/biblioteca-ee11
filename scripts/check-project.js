@@ -7,6 +7,7 @@ const requiredFiles = [
   'portal.css',
   'portal-interactions.css',
   'portal-layout-v2.css',
+  'portal-layout-exact.css',
   'favicon.ico',
   'favicon-32x32.png',
   'apple-touch-icon.png',
@@ -21,7 +22,10 @@ const requiredFiles = [
   'api/health.js',
   'assets/logo-escola.png',
   'assets/cabecalho-escola.png',
-  'assets/estudantes-lendo-biblioteca-v2.png'
+  'assets/estudantes-biblioteca.png',
+  'assets/layout-inicio-desktop.png',
+  'assets/layout-inicio-mobile.png',
+  'assets/layout-inicio-mobile-sem-menu.png'
 ];
 
 await Promise.all(requiredFiles.map((file) => access(new URL(`../${file}`, import.meta.url))));
@@ -41,6 +45,7 @@ for (const reference of [
   '/portal.css',
   '/portal-interactions.css',
   '/portal-layout-v2.css',
+  '/portal-layout-exact.css',
   '/favicon.ico',
   '/apple-touch-icon.png',
   '/assets/og-biblioteca.png',
@@ -49,7 +54,9 @@ for (const reference of [
   '/config.js',
   '/supabase-client.js',
   '/assets/logo-escola.png',
-  '/assets/estudantes-lendo-biblioteca-v2.png'
+  '/assets/estudantes-biblioteca.png',
+  '/assets/layout-inicio-desktop.png',
+  '/assets/layout-inicio-mobile-sem-menu.png'
 ]) {
   if (!html.includes(reference)) {
     throw new Error(`Referência obrigatória ausente no index.html: ${reference}`);
