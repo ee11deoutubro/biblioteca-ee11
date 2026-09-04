@@ -1,4 +1,4 @@
-# Biblioteca EE 11 de Outubro — versão 0.8.2
+# Biblioteca EE 11 de Outubro — versão 0.8.3
 
 MVP online para gestão da biblioteca escolar da EE 11 de Outubro.
 
