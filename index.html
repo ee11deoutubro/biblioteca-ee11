@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#071c4d" />
   <meta name="description" content="Sistema de gestão da Biblioteca da EE 11 de Outubro" />
-  <meta name="app-version" content="0.7.0" />
+  <meta name="app-version" content="0.8.0" />
   <meta property="og:locale" content="pt_BR" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Biblioteca 11 • EE 11 de Outubro" />
@@ -51,41 +51,71 @@
       [100, 500, 1200, 2500].forEach((delay) => setTimeout(resetTop, delay));
     })();
   </script>
-  <link rel="icon" href="/favicon.ico?v=6" sizes="any" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=6" />
-  <link rel="icon" type="image/png" sizes="512x512" href="/assets/app-icon.png?v=3" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=6" />
+  <link rel="icon" href="/favicon.ico?v=7" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=7" />
+  <link rel="icon" type="image/png" sizes="512x512" href="/assets/logo-escola.png?v=7" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=7" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/styles.css?v=0.7.0" />
-  <link rel="stylesheet" href="/auth.css?v=0.7.0" />
-  <link rel="stylesheet" href="/portal.css?v=0.7.0" />
+  <link rel="stylesheet" href="/styles.css?v=0.8.0" />
+  <link rel="stylesheet" href="/auth.css?v=0.8.0" />
+  <link rel="stylesheet" href="/portal.css?v=0.8.0" />
 </head>
 <body>
   <section class="public-portal" id="publicPortal" aria-labelledby="publicTitle">
     <header class="public-header">
-      <a class="public-brand" href="#catalogoPublico" aria-label="Biblioteca 11 — início">
-        <img src="/assets/app-icon.png?v=3" alt="Ícone da Biblioteca 11" />
+      <button class="public-brand" type="button" data-public-nav="inicio" aria-label="Biblioteca 11 — início">
+        <img src="/assets/logo-escola.png?v=7" alt="Brasão da EE 11 de Outubro" />
         <span><strong>Biblioteca 11</strong><small>EE 11 de Outubro</small></span>
-      </a>
+      </button>
+      <nav class="public-nav" aria-label="Navegação pública">
+        <button type="button" data-public-nav="inicio">Início</button>
+        <button type="button" data-public-nav="catalogo">Acervo</button>
+        <button type="button" data-public-nav="emprestimos">Meus empréstimos</button>
+      </nav>
       <button class="admin-access-button" id="openAdminLogin" type="button">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5z"/></svg>
         Acesso administrativo
       </button>
     </header>
 
-    <div class="public-main">
-      <section class="public-intro">
-        <div>
-          <span class="public-kicker">ACERVO DA ESCOLA</span>
-          <h1 id="publicTitle">Encontre sua próxima leitura.</h1>
-          <p>Consulte os títulos disponíveis e faça sua reserva usando o Código do Aluno cadastrado no SGDE.</p>
+    <main class="public-main">
+      <section class="public-view public-home" id="publicHomeView" data-public-view="inicio">
+        <div class="public-hero">
+          <div class="public-hero-copy">
+            <span class="public-kicker">BIBLIOTECA ESCOLAR</span>
+            <h1 id="publicTitle">Uma história nova começa por aqui.</h1>
+            <p>Descubra livros, reserve sua próxima leitura e acompanhe seus empréstimos com o Código do Aluno do SGDE.</p>
+            <div class="public-hero-actions">
+              <button class="hero-primary" type="button" data-public-nav="catalogo">Acessar o acervo <span>→</span></button>
+              <button class="hero-secondary" type="button" data-public-nav="emprestimos">Consultar meus empréstimos</button>
+            </div>
+            <div class="public-trust-row">
+              <span><strong>3 dias</strong> para retirar uma reserva</span>
+              <span><strong>Código SGDE</strong> para identificar o aluno</span>
+            </div>
+          </div>
+          <div class="public-hero-art" aria-hidden="true">
+            <div class="hero-glow"></div>
+            <img src="/assets/estudantes-biblioteca.png" alt="" />
+            <div class="hero-note"><span>✦</span><strong>Leitura que transforma</strong><small>Biblioteca • EE 11 de Outubro</small></div>
+          </div>
         </div>
-        <div class="pickup-rule"><strong>3 dias</strong><span>para retirar sua reserva na biblioteca</span></div>
+
+        <div class="public-paths" aria-label="Acessos da biblioteca">
+          <button type="button" data-public-nav="catalogo"><span class="path-icon">⌕</span><span><small>EXPLORE</small><strong>Acessar acervo</strong><em>Consulte os livros disponíveis e faça sua reserva.</em></span><b>→</b></button>
+          <button type="button" data-public-nav="emprestimos"><span class="path-icon">✓</span><span><small>ACOMPANHE</small><strong>Meus empréstimos</strong><em>Veja seus livros ativos usando seu Código SGDE.</em></span><b>→</b></button>
+          <button type="button" data-open-admin><span class="path-icon">⌘</span><span><small>ÁREA RESTRITA</small><strong>Acesso administrativo</strong><em>Gestão Escolar e profissionais da biblioteca.</em></span><b>→</b></button>
+        </div>
       </section>
 
-      <section class="public-catalog" id="catalogoPublico" aria-labelledby="publicCatalogTitle">
+      <section class="public-view public-catalog" id="publicCatalogView" data-public-view="catalogo" aria-labelledby="publicCatalogTitle" hidden>
+        <div class="public-view-banner">
+          <button class="public-back" type="button" data-public-nav="inicio">← Início</button>
+          <div><span>ACERVO DA ESCOLA</span><h1>Encontre sua próxima leitura.</h1><p>Pesquise por título, autor ou gênero e reserve usando o Código do Aluno do SGDE.</p></div>
+          <div class="pickup-rule"><strong>3 dias</strong><span>para retirar a reserva</span></div>
+        </div>
         <div class="public-section-heading">
           <div><span>CATÁLOGO</span><h2 id="publicCatalogTitle">Livros disponíveis</h2></div>
           <p id="publicCatalogStatus" role="status" aria-live="polite">Carregando o acervo...</p>
@@ -103,7 +133,36 @@
         <section class="public-book-grid" id="publicCatalogGrid" aria-label="Catálogo de livros"></section>
         <section class="public-empty" id="publicCatalogEmpty" hidden><h3>Nenhum título encontrado</h3><p>Altere a busca ou o filtro para consultar outros livros.</p></section>
       </section>
-    </div>
+
+      <section class="public-view public-loans" id="publicLoansView" data-public-view="emprestimos" aria-labelledby="publicLoansTitle" hidden>
+        <div class="public-view-banner loans-banner">
+          <button class="public-back" type="button" data-public-nav="inicio">← Início</button>
+          <div><span>ÁREA DO ALUNO</span><h1 id="publicLoansTitle">Consulte seus empréstimos.</h1><p>Use o mesmo Código do Aluno cadastrado no SGDE para visualizar os livros que estão com você.</p></div>
+          <div class="loans-banner-icon" aria-hidden="true">✓</div>
+        </div>
+        <div class="loan-lookup-layout">
+          <section class="loan-lookup-card">
+            <span class="loan-card-kicker">CONSULTA SEGURA</span>
+            <h2>Digite seu Código SGDE</h2>
+            <p>O sistema buscará apenas os empréstimos ativos vinculados ao seu cadastro.</p>
+            <form id="loanLookupForm" novalidate>
+              <label class="loan-code-field"><span>Código do Aluno</span><div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8m-8 4h5"/></svg><input id="loanStudentCode" type="text" inputmode="numeric" autocomplete="off" maxlength="30" placeholder="Digite seu código" required /></div></label>
+              <button id="loanLookupButton" type="submit">Consultar meus empréstimos <span>→</span></button>
+            </form>
+            <p class="loan-lookup-message" id="loanLookupMessage" role="alert" aria-live="polite"></p>
+            <div class="loan-privacy"><span>i</span><p>Seu código é usado somente para localizar seu cadastro nesta consulta.</p></div>
+          </section>
+          <section class="loan-results-panel" id="loanResultsPanel">
+            <div class="loan-results-placeholder" id="loanResultsPlaceholder"><span>⌕</span><h2>Seus livros aparecerão aqui</h2><p>Informe o Código SGDE para verificar se há empréstimos ativos.</p></div>
+            <div id="loanResultsContent" hidden>
+              <div class="loan-student-summary" id="loanStudentSummary"></div>
+              <div class="loan-results-list" id="loanResults"></div>
+              <div class="loan-empty" id="loanEmpty" hidden><span>✓</span><h3>Nenhum empréstimo ativo</h3><p>Não há livros emprestados vinculados a este código no momento.</p></div>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
 
     <footer class="public-footer">EE 11 de Outubro • Biblioteca Escolar</footer>
   </section>
@@ -140,7 +199,7 @@
   <section class="auth-screen" id="authScreen" aria-labelledby="loginTitle" hidden>
     <div class="auth-showcase">
       <div class="auth-brand">
-        <span class="auth-logo"><img src="/assets/app-icon.png?v=3" alt="Ícone da Biblioteca 11" /></span>
+        <span class="auth-logo"><img src="/assets/logo-escola.png?v=7" alt="Brasão da EE 11 de Outubro" /></span>
         <div><strong>Biblioteca 11</strong><small>EE 11 de Outubro</small></div>
       </div>
       <div class="auth-copy">
@@ -192,7 +251,7 @@
   <div class="app-layout" id="adminApp" hidden>
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-brand">
-        <span class="logo-frame"><img src="/assets/app-icon.png?v=3" alt="Ícone da Biblioteca 11" /></span>
+        <span class="logo-frame"><img src="/assets/logo-escola.png?v=7" alt="Brasão da EE 11 de Outubro" /></span>
         <div><strong>Biblioteca 11</strong><small>EE 11 de Outubro</small></div>
       </div>
 
@@ -391,7 +450,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="/config.js"></script>
   <script src="/supabase-client.js"></script>
-  <script src="/portal.js?v=0.7.0"></script>
-  <script src="/app.js?v=0.7.0"></script>
+  <script src="/portal.js?v=0.8.0"></script>
+  <script src="/app.js?v=0.8.0"></script>
 </body>
 </html>

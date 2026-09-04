@@ -1,6 +1,14 @@
-# Biblioteca EE 11 de Outubro
+# Biblioteca EE 11 de Outubro — versão 0.8.0
 
 MVP online para gestão da biblioteca escolar da EE 11 de Outubro.
+
+## Portal público
+
+- Tela inicial com acessos separados para **Acervo**, **Meus empréstimos** e **Acesso administrativo**.
+- Catálogo com busca, gêneros, disponibilidade e reserva pelo Código do Aluno do SGDE.
+- Consulta de empréstimos ativos pelo Código SGDE, incluindo prazo e situação da devolução.
+- Layout responsivo com margens de segurança para celular.
+- O brasão oficial aparece na interface e nos ícones do navegador. O ícone do livro fica somente na imagem de compartilhamento do endereço.
 
 ## Situação do desenvolvimento
 
@@ -55,9 +63,9 @@ administrativo exige autenticação e um perfil ativo do tipo `gestao_escolar`
 ou `bibliotecario`; as permissões de dados continuam protegidas pelo RLS do
 Supabase mesmo que alguém tente acessar as APIs fora da interface.
 
-A página inicial é pública e reúne a consulta do catálogo, os filtros por gênero
-e a reserva de títulos. O login fica separado e é exclusivo para Gestão Escolar
-e Bibliotecário.
+A página inicial é pública e apresenta três caminhos: acesso ao acervo, consulta
+dos empréstimos pelo Código SGDE e acesso administrativo. O login fica separado
+e é exclusivo para Gestão Escolar e Bibliotecário.
 
 Na tela **Acervo**, livro e quantidade de exemplares são cadastrados juntos.
 Quando um ISBN já existe, o sistema adiciona os novos exemplares ao título

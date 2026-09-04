@@ -8,7 +8,6 @@ const requiredFiles = [
   'favicon.ico',
   'favicon-32x32.png',
   'apple-touch-icon.png',
-  'assets/app-icon.png',
   'assets/og-biblioteca.png',
   'app.js',
   'portal.js',
@@ -40,7 +39,6 @@ for (const reference of [
   '/portal.css',
   '/favicon.ico',
   '/apple-touch-icon.png',
-  '/assets/app-icon.png',
   '/assets/og-biblioteca.png',
   '/app.js',
   '/portal.js',
@@ -66,6 +64,14 @@ if (!html.includes('id="catalogCategories"') || !html.includes('id="editCoverPre
 if (!html.includes('id="publicPortal"') || !html.includes('id="reservationModal"')) {
   throw new Error('O catálogo público ou o fluxo de reserva está incompleto.');
 }
+for (const publicView of ['publicHomeView', 'publicCatalogView', 'publicLoansView']) {
+  if (!html.includes(`id="${publicView}"`)) {
+    throw new Error(`Tela pública ausente: ${publicView}`);
+  }
+}
+if (html.includes('/assets/app-icon.png')) {
+  throw new Error('O ícone do livro deve permanecer apenas na prévia de compartilhamento.');
+}
 
 const appScript = await readFile(new URL('../app.js', import.meta.url), 'utf8');
 if (!appScript.includes('sessionStorage.getItem') || !appScript.includes('sessionStorage.setItem')) {
@@ -81,7 +87,7 @@ for (const feature of ['renderCategoryTabs', 'openEditBookForm', 'saveEditedBook
 }
 
 const portalScript = await readFile(new URL('../portal.js', import.meta.url), 'utf8');
-for (const feature of ['localizar_aluno_por_codigo', 'reservar_livro_por_codigo']) {
+for (const feature of ['localizar_aluno_por_codigo', 'reservar_livro_por_codigo', 'consultar_emprestimos_por_codigo', 'activatePublicView']) {
   if (!portalScript.includes(feature)) {
     throw new Error(`Recurso de reserva pública ausente: ${feature}`);
   }
@@ -94,7 +100,7 @@ const reservationsSql = await readFile(
   new URL('../ativar-reservas-online.sql', import.meta.url),
   'utf8'
 );
-for (const feature of ["'{\"dias\": 3}'", 'reservar_livro_por_codigo', 'liberar_solicitacoes_expiradas']) {
+for (const feature of ["'{\"dias\": 3}'", 'reservar_livro_por_codigo', 'liberar_solicitacoes_expiradas', 'consultar_emprestimos_por_codigo']) {
   if (!reservationsSql.includes(feature)) {
     throw new Error(`Regra de reserva ausente no Supabase: ${feature}`);
   }

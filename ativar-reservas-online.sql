@@ -261,15 +261,87 @@ begin
 end;
 $$;
 
+create or replace function public.consultar_emprestimos_por_codigo(p_codigo text)
+returns table (
+  aluno_nome text,
+  aluno_codigo text,
+  turma text,
+  emprestimo_id uuid,
+  titulo text,
+  autor text,
+  capa_url text,
+  exemplar_codigo text,
+  emprestado_em timestamptz,
+  devolucao_prevista date,
+  situacao text
+)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+  if length(trim(coalesce(p_codigo, ''))) < 2 then
+    raise exception 'Informe um Código do Aluno válido.';
+  end if;
+
+  if not exists (
+    select 1
+    from public.pessoas p
+    where p.tipo = 'aluno'
+      and p.ativo = true
+      and p.matricula is not null
+      and regexp_replace(p.matricula, '\s+', '', 'g') =
+          regexp_replace(trim(p_codigo), '\s+', '', 'g')
+  ) then
+    raise exception 'Aluno não localizado. Confira o Código do Aluno cadastrado no SGDE.';
+  end if;
+
+  return query
+  select
+    p.nome as aluno_nome,
+    p.matricula as aluno_codigo,
+    t.nome as turma,
+    em.id as emprestimo_id,
+    l.titulo,
+    l.autor,
+    l.capa_url,
+    ex.codigo as exemplar_codigo,
+    em.emprestado_em,
+    em.devolucao_prevista,
+    case
+      when em.id is null then 'sem_emprestimo'
+      when em.devolucao_prevista < current_date then 'em_atraso'
+      when em.devolucao_prevista = current_date then 'devolver_hoje'
+      else 'ativo'
+    end as situacao
+  from public.pessoas p
+  left join public.turmas t on t.id = p.turma_id
+  left join public.emprestimos em
+    on em.pessoa_id = p.id
+   and em.status = 'ativo'
+  left join public.exemplares ex on ex.id = em.exemplar_id
+  left join public.livros l on l.id = ex.livro_id
+  where p.tipo = 'aluno'
+    and p.ativo = true
+    and p.matricula is not null
+    and regexp_replace(p.matricula, '\s+', '', 'g') =
+        regexp_replace(trim(p_codigo), '\s+', '', 'g')
+  order by em.devolucao_prevista nulls last;
+end;
+$$;
+
 revoke all on function public.localizar_aluno_por_codigo(text) from public;
 revoke all on function public.reservar_livro_por_codigo(text, uuid) from public;
 revoke all on function public.consultar_acervo_publico_atualizado() from public;
 revoke all on function public.listar_solicitacoes_administracao() from public;
+revoke all on function public.consultar_emprestimos_por_codigo(text) from public;
 
 grant execute on function public.localizar_aluno_por_codigo(text) to anon, authenticated;
 grant execute on function public.reservar_livro_por_codigo(text, uuid) to anon, authenticated;
 grant execute on function public.consultar_acervo_publico_atualizado() to anon, authenticated;
 grant execute on function public.listar_solicitacoes_administracao() to authenticated;
+grant execute on function public.consultar_emprestimos_por_codigo(text) to anon, authenticated;
 
 commit;
 

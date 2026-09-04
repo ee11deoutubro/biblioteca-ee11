@@ -2,6 +2,8 @@
   'use strict';
 
   const portal = document.getElementById('publicPortal');
+  const publicViews = [...document.querySelectorAll('[data-public-view]')];
+  const publicNavigation = [...document.querySelectorAll('[data-public-nav]')];
   const search = document.getElementById('publicCatalogSearch');
   const availability = document.getElementById('publicAvailability');
   const refreshButton = document.getElementById('publicRefreshCatalog');
@@ -23,6 +25,15 @@
   const confirmButton = document.getElementById('confirmReservation');
   const successText = document.getElementById('reservationSuccessText');
   const deadline = document.getElementById('reservationDeadline');
+  const loanLookupForm = document.getElementById('loanLookupForm');
+  const loanStudentCode = document.getElementById('loanStudentCode');
+  const loanLookupButton = document.getElementById('loanLookupButton');
+  const loanLookupMessage = document.getElementById('loanLookupMessage');
+  const loanResultsPlaceholder = document.getElementById('loanResultsPlaceholder');
+  const loanResultsContent = document.getElementById('loanResultsContent');
+  const loanStudentSummary = document.getElementById('loanStudentSummary');
+  const loanResults = document.getElementById('loanResults');
+  const loanEmpty = document.getElementById('loanEmpty');
 
   let catalog = [];
   let selectedCategory = 'todos';
@@ -63,6 +74,30 @@
       hour: '2-digit',
       minute: '2-digit'
     }).format(new Date(value));
+  }
+
+  function formatDate(value) {
+    if (!value) return 'Data não informada';
+    return new Intl.DateTimeFormat('pt-BR', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    }).format(new Date(`${value}T12:00:00`));
+  }
+
+  function activatePublicView(viewName, options = {}) {
+    const requestedView = publicViews.some((view) => view.dataset.publicView === viewName)
+      ? viewName
+      : 'inicio';
+    publicViews.forEach((view) => { view.hidden = view.dataset.publicView !== requestedView; });
+    publicNavigation.forEach((button) => {
+      const active = button.dataset.publicNav === requestedView;
+      button.classList.toggle('active', active);
+      if (active) button.setAttribute('aria-current', 'page');
+      else button.removeAttribute('aria-current');
+    });
+    if (requestedView === 'catalogo' && !catalog.length) loadCatalog();
+    if (!options.preserveScroll) window.scrollTo({ top: 0, behavior: options.instant ? 'auto' : 'smooth' });
   }
 
   function friendlyReservationError(error) {
@@ -255,6 +290,68 @@
     }
   }
 
+  function loanStatusLabel(statusValue) {
+    if (statusValue === 'em_atraso') return { label: 'Em atraso', className: 'overdue' };
+    if (statusValue === 'devolver_hoje') return { label: 'Devolver hoje', className: 'today' };
+    return { label: 'Em andamento', className: '' };
+  }
+
+  function renderLoans(rows) {
+    const student = rows[0];
+    const activeLoans = rows.filter((row) => row.emprestimo_id);
+    loanStudentSummary.innerHTML = `<div><strong>${escapeHtml(student.aluno_nome)}</strong><span>${escapeHtml(student.turma || 'Aluno da EE 11 de Outubro')} • Código ${escapeHtml(student.aluno_codigo)}</span></div><b>${activeLoans.length} empréstimo${activeLoans.length === 1 ? '' : 's'} ativo${activeLoans.length === 1 ? '' : 's'}</b>`;
+    loanResults.innerHTML = activeLoans.map((loan) => {
+      const state = loanStatusLabel(loan.situacao);
+      const cover = loan.capa_url
+        ? `<img src="${escapeHtml(loan.capa_url)}" alt="Capa de ${escapeHtml(loan.titulo)}" loading="lazy" />`
+        : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2zm2 0v16"/></svg>';
+      return `<article class="loan-result-card"><div class="loan-result-cover">${cover}</div><div class="loan-result-main"><h3>${escapeHtml(loan.titulo)}</h3><p>${escapeHtml(loan.autor || 'Autor não informado')}</p><small>Exemplar ${escapeHtml(loan.exemplar_codigo || 'sem código')}</small></div><div class="loan-result-status"><span class="${state.className}">${state.label}</span><strong>Devolver: ${formatDate(loan.devolucao_prevista)}</strong></div></article>`;
+    }).join('');
+    loanEmpty.hidden = activeLoans.length > 0;
+    loanResults.hidden = activeLoans.length === 0;
+    loanResultsPlaceholder.hidden = true;
+    loanResultsContent.hidden = false;
+  }
+
+  async function lookupLoans(event) {
+    event.preventDefault();
+    const studentCode = loanStudentCode.value.trim();
+    if (!studentCode) {
+      loanLookupMessage.textContent = 'Informe o Código do Aluno cadastrado no SGDE.';
+      loanStudentCode.focus();
+      return;
+    }
+    const client = window.bibliotecaSupabase;
+    if (!client) {
+      loanLookupMessage.textContent = window.bibliotecaSupabaseError || 'Conexão indisponível.';
+      return;
+    }
+    loanLookupButton.disabled = true;
+    loanLookupButton.firstChild.textContent = 'Consultando... ';
+    loanLookupMessage.textContent = '';
+    try {
+      const { data, error } = await client.rpc('consultar_emprestimos_por_codigo', { p_codigo: studentCode });
+      if (error) throw error;
+      if (!data?.length) throw new Error('Aluno não localizado. Confira o Código do Aluno cadastrado no SGDE.');
+      renderLoans(data);
+      document.getElementById('loanResultsPanel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (error) {
+      loanResultsContent.hidden = true;
+      loanResultsPlaceholder.hidden = false;
+      loanLookupMessage.textContent = friendlyReservationError(error);
+    } finally {
+      loanLookupButton.disabled = false;
+      loanLookupButton.firstChild.textContent = 'Consultar meus empréstimos ';
+    }
+  }
+
+  publicNavigation.forEach((button) => {
+    button.addEventListener('click', () => activatePublicView(button.dataset.publicNav));
+  });
+  document.querySelectorAll('[data-open-admin]').forEach((button) => {
+    button.addEventListener('click', () => document.getElementById('openAdminLogin')?.click());
+  });
+
   search?.addEventListener('input', renderCatalog);
   availability?.addEventListener('change', renderCatalog);
   refreshButton?.addEventListener('click', () => loadCatalog());
@@ -271,6 +368,7 @@
   });
   lookupForm?.addEventListener('submit', lookupStudent);
   confirmButton?.addEventListener('click', reserveBook);
+  loanLookupForm?.addEventListener('submit', lookupLoans);
   modal?.addEventListener('click', (event) => {
     if (event.target.closest('[data-close-reservation]')) closeReservation();
   });
@@ -281,11 +379,10 @@
   window.BibliotecaPortal = Object.freeze({
     show: (notice = '') => {
       if (notice) status.textContent = notice;
-      if (!catalog.length) loadCatalog();
-      else renderCatalog();
+      activatePublicView('inicio', { instant: true });
     },
     refresh: () => loadCatalog(false)
   });
 
-  if (portal && !portal.hidden) loadCatalog();
+  if (portal && !portal.hidden) activatePublicView('inicio', { instant: true });
 })();
