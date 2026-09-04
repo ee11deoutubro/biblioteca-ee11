@@ -23,9 +23,8 @@ const requiredFiles = [
   'assets/logo-escola.png',
   'assets/cabecalho-escola.png',
   'assets/estudantes-biblioteca.png',
-  'assets/layout-inicio-desktop.png',
-  'assets/layout-inicio-mobile.png',
-  'assets/layout-inicio-mobile-sem-menu.png'
+  'assets/fundo-inicio-desktop.png',
+  'assets/fundo-inicio-mobile.png'
 ];
 
 await Promise.all(requiredFiles.map((file) => access(new URL(`../${file}`, import.meta.url))));
@@ -55,8 +54,8 @@ for (const reference of [
   '/supabase-client.js',
   '/assets/logo-escola.png',
   '/assets/estudantes-biblioteca.png',
-  '/assets/layout-inicio-desktop.png',
-  '/assets/layout-inicio-mobile-sem-menu.png'
+  '/assets/fundo-inicio-desktop.png',
+  '/assets/fundo-inicio-mobile.png'
 ]) {
   if (!html.includes(reference)) {
     throw new Error(`Referência obrigatória ausente no index.html: ${reference}`);

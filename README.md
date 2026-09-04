@@ -1,8 +1,8 @@
-# Biblioteca EE 11 de Outubro — versão 0.9.2
+# Biblioteca EE 11 de Outubro — versão 0.10.0
 
-Esta versão usa integralmente os layouts finais aprovados para desktop e celular, sem redesenhar ou aplicar filtros às artes. As áreas de navegação foram adicionadas sobre o layout para manter o APP funcional.
+Esta versão usa as artes limpas e inalteradas somente como fundo da tela inicial. Cabeçalho, brasão, textos, cartões e navegação são elementos reais do APP em HTML e CSS.
 
-No celular, o menu superior foi removido por ser redundante com os cartões centrais e a barra de navegação inferior.
+No celular, o menu superior permanece removido por ser redundante com os cartões centrais e a barra de navegação inferior.
 
 MVP online para gestão da biblioteca escolar da EE 11 de Outubro.
 
