@@ -1,0 +1,458 @@
+/* Layout público aprovado — versão 0.9.0 */
+.public-menu-button,
+.public-bottom-nav {
+  display: none;
+}
+
+.public-main {
+  width: min(1500px, calc(100% - 36px));
+  padding-top: 28px;
+}
+
+.public-home .public-hero {
+  display: block;
+  min-height: clamp(590px, calc(100dvh - 128px), 745px);
+  border-radius: 34px;
+  background: #071c4d;
+  isolation: isolate;
+}
+
+.public-home .public-hero::before {
+  z-index: 3;
+  opacity: .3;
+  pointer-events: none;
+}
+
+.public-home .public-hero-art {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  display: block;
+}
+
+.public-home .public-hero-art::before {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  width: auto;
+  background:
+    linear-gradient(90deg,
+      #071c4d 0%,
+      rgba(7, 28, 77, .995) 24%,
+      rgba(7, 28, 77, .94) 36%,
+      rgba(7, 28, 77, .72) 47%,
+      rgba(7, 28, 77, .34) 58%,
+      rgba(7, 28, 77, .06) 70%,
+      rgba(7, 28, 77, 0) 78%),
+    linear-gradient(0deg,
+      rgba(7, 28, 77, .98) 0%,
+      rgba(7, 28, 77, .75) 15%,
+      rgba(7, 28, 77, .12) 34%,
+      rgba(7, 28, 77, 0) 48%);
+  pointer-events: none;
+}
+
+.public-home .public-hero-art::after {
+  display: none;
+}
+
+.public-home .public-hero-art img {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 49%;
+  filter: saturate(1.14) contrast(1.04) brightness(1.04);
+  mask-image: none;
+}
+
+.public-home .public-hero-copy {
+  position: relative;
+  z-index: 5;
+  width: 57%;
+  min-height: inherit;
+  padding: clamp(72px, 8vh, 108px) 56px 250px;
+  display: block;
+}
+
+.public-home .public-kicker {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  padding: 0 18px;
+  border: 1px solid rgba(255, 255, 255, .35);
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(255, 255, 255, .06);
+  letter-spacing: .14em;
+  font-size: .68rem;
+  font-weight: 900;
+}
+
+.public-home .public-hero h1 {
+  max-width: 720px;
+  margin: 26px 0 18px;
+  font-size: clamp(3.1rem, 5.15vw, 5.35rem);
+  line-height: .98;
+}
+
+.public-home .public-hero-copy > p {
+  max-width: 650px;
+  color: #e1eaf7;
+  font-size: clamp(.94rem, 1.25vw, 1.13rem);
+  line-height: 1.55;
+}
+
+.public-home .public-paths {
+  position: absolute;
+  z-index: 6;
+  left: 56px;
+  bottom: 54px;
+  width: min(910px, calc(70% - 56px));
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.public-home .public-paths > button,
+.public-home .public-paths > button:last-child {
+  grid-column: auto;
+  min-height: 112px;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  border: 1px solid rgba(255, 255, 255, .42);
+  border-radius: 18px;
+  padding: 15px;
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 18px 35px rgba(2, 16, 49, .2);
+  backdrop-filter: blur(12px);
+}
+
+.public-home .path-icon {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: #1768d4;
+  background: #eaf2ff;
+}
+
+.public-home .path-icon svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.public-home .public-paths strong {
+  font-size: .84rem;
+}
+
+.public-home .public-paths em {
+  font-size: .59rem;
+}
+
+.public-home .hero-note {
+  z-index: 5;
+  right: 24px;
+  bottom: 24px;
+}
+
+/* A ilustração interna também termina suavemente dentro do azul. */
+.hero-visual {
+  width: 62%;
+}
+
+.hero-visual::before {
+  background: linear-gradient(90deg,
+    #0a2e6c 0%,
+    rgba(10, 46, 108, .98) 15%,
+    rgba(10, 46, 108, .78) 28%,
+    rgba(10, 46, 108, .38) 42%,
+    rgba(10, 46, 108, .08) 55%,
+    rgba(10, 46, 108, 0) 64%);
+}
+
+.hero-visual img,
+.auth-image img {
+  filter: saturate(1.14) contrast(1.04) brightness(1.04);
+}
+
+@media (max-width: 1080px) and (min-width: 721px) {
+  .public-home .public-hero-copy {
+    width: 62%;
+    padding-left: 40px;
+  }
+
+  .public-home .public-paths {
+    left: 40px;
+    width: calc(100% - 80px);
+  }
+}
+
+@media (max-width: 720px) {
+  .public-portal {
+    padding-bottom: calc(68px + env(safe-area-inset-bottom));
+  }
+
+  .public-header {
+    min-height: 76px;
+    padding: 0 max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
+    grid-template-columns: 1fr auto;
+    position: sticky;
+  }
+
+  .public-brand img {
+    width: 48px;
+    height: 48px;
+  }
+
+  .admin-access-button {
+    display: none;
+  }
+
+  .public-menu-button {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-content: center;
+    gap: 5px;
+    border: 1px solid #d6e0ee;
+    border-radius: 13px;
+    background: #fff;
+  }
+
+  .public-menu-button span {
+    display: block;
+    width: 19px;
+    height: 2px;
+    border-radius: 2px;
+    background: #10275c;
+  }
+
+  .public-nav {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 14px;
+    right: 14px;
+    z-index: 40;
+    display: none;
+    padding: 8px;
+    border: 1px solid #d9e3f0;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, .98);
+    box-shadow: 0 18px 40px rgba(10, 35, 80, .18);
+  }
+
+  .public-nav.open {
+    display: grid;
+  }
+
+  .public-nav button,
+  .public-nav button:first-child {
+    display: block;
+    min-height: 44px;
+    text-align: left;
+  }
+
+  .public-main {
+    width: 100%;
+    padding: 0;
+  }
+
+  .public-home .public-hero {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 300px auto auto;
+    grid-template-areas: "art" "copy" "paths";
+    border-radius: 0;
+    box-shadow: none;
+    background: #071c4d;
+  }
+
+  .public-home .public-hero::before {
+    opacity: .2;
+  }
+
+  .public-home .public-hero-art {
+    grid-area: art;
+    position: relative;
+    inset: auto;
+    height: 300px;
+  }
+
+  .public-home .public-hero-art::before {
+    background: linear-gradient(0deg,
+      #071c4d 0%,
+      rgba(7, 28, 77, .96) 8%,
+      rgba(7, 28, 77, .72) 18%,
+      rgba(7, 28, 77, .32) 29%,
+      rgba(7, 28, 77, 0) 43%);
+  }
+
+  .public-home .public-hero-art img {
+    object-position: center 47%;
+  }
+
+  .public-home .hero-note {
+    display: none;
+  }
+
+  .public-home .public-hero-copy {
+    grid-area: copy;
+    width: auto;
+    min-height: 0;
+    padding: 18px 22px 24px;
+    background: #071c4d;
+  }
+
+  .public-home .public-kicker {
+    min-height: 32px;
+    padding: 0 14px;
+    font-size: .58rem;
+  }
+
+  .public-home .public-hero h1 {
+    margin: 18px 0 14px;
+    font-size: clamp(2.45rem, 12.2vw, 4rem);
+    letter-spacing: -.06em;
+  }
+
+  .public-home .public-hero-copy > p {
+    font-size: .88rem;
+    line-height: 1.55;
+  }
+
+  .public-home .public-paths {
+    grid-area: paths;
+    position: static;
+    width: auto;
+    margin: 0;
+    padding: 0 16px 30px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 11px;
+    background: #071c4d;
+  }
+
+  .public-home .public-paths > button,
+  .public-home .public-paths > button:last-child {
+    min-height: 94px;
+    padding: 14px;
+    border-radius: 17px;
+  }
+
+  .public-home .public-paths em {
+    font-size: .62rem;
+  }
+
+  .public-catalog,
+  .public-loans {
+    width: calc(100% - 24px);
+    margin: 12px auto 24px;
+  }
+
+  .public-footer {
+    display: none;
+  }
+
+  .public-bottom-nav {
+    position: fixed;
+    z-index: 55;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    min-height: calc(65px + env(safe-area-inset-bottom));
+    padding: 5px 8px env(safe-area-inset-bottom);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid #dce4ef;
+    background: rgba(255, 255, 255, .97);
+    box-shadow: 0 -9px 28px rgba(8, 30, 72, .1);
+    backdrop-filter: blur(14px);
+  }
+
+  .public-bottom-nav button {
+    position: relative;
+    min-width: 0;
+    border: 0;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 3px;
+    background: transparent;
+    color: #718097;
+    font-size: .61rem;
+    font-weight: 800;
+  }
+
+  .public-bottom-nav button::before {
+    content: "";
+    position: absolute;
+    top: -5px;
+    width: 38px;
+    height: 3px;
+    border-radius: 0 0 5px 5px;
+    background: transparent;
+  }
+
+  .public-bottom-nav button.active {
+    color: #1768d4;
+    background: #eef5ff;
+  }
+
+  .public-bottom-nav button.active::before {
+    background: #1768d4;
+  }
+
+  .public-bottom-nav svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+@media (max-width: 390px) {
+  .public-home .public-hero {
+    grid-template-rows: 255px auto auto;
+  }
+
+  .public-home .public-hero-art {
+    height: 255px;
+  }
+
+  .public-home .public-hero-copy {
+    padding-inline: 18px;
+  }
+
+  .public-home .public-hero h1 {
+    font-size: 2.35rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-portal *,
+  .public-portal *::before,
+  .public-portal *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}

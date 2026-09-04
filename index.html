@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#071c4d" />
   <meta name="description" content="Sistema de gestão da Biblioteca da EE 11 de Outubro" />
-  <meta name="app-version" content="0.8.3" />
+  <meta name="app-version" content="0.9.0" />
   <meta property="og:locale" content="pt_BR" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Biblioteca 11 • EE 11 de Outubro" />
@@ -62,6 +62,7 @@
   <link rel="stylesheet" href="/auth.css?v=0.8.0" />
   <link rel="stylesheet" href="/portal.css?v=0.8.0" />
   <link rel="stylesheet" href="/portal-interactions.css?v=0.8.3" />
+  <link rel="stylesheet" href="/portal-layout-v2.css?v=0.9.0" />
 </head>
 <body>
   <section class="public-portal" id="publicPortal" aria-labelledby="publicTitle">
@@ -79,6 +80,9 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5z"/></svg>
         Acesso administrativo
       </button>
+      <button class="public-menu-button" id="publicMenuButton" type="button" aria-label="Abrir menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
     </header>
 
     <main class="public-main">
@@ -88,26 +92,16 @@
             <span class="public-kicker">BIBLIOTECA ESCOLAR</span>
             <h1 id="publicTitle">Uma história nova começa por aqui.</h1>
             <p>Descubra livros, reserve sua próxima leitura e acompanhe seus empréstimos com o Código do Aluno do SGDE.</p>
-            <div class="public-hero-actions">
-              <button class="hero-primary" type="button" data-public-nav="catalogo">Acessar o acervo <span>→</span></button>
-              <button class="hero-secondary" type="button" data-public-nav="emprestimos">Consultar meus empréstimos</button>
-            </div>
-            <div class="public-trust-row">
-              <span><strong>3 dias</strong> para retirar uma reserva</span>
-              <span><strong>Código SGDE</strong> para identificar o aluno</span>
-            </div>
           </div>
           <div class="public-hero-art" aria-hidden="true">
-            <div class="hero-glow"></div>
-            <img src="/assets/estudantes-biblioteca.png" alt="" />
+            <img src="/assets/estudantes-lendo-biblioteca-v2.png" alt="" />
             <div class="hero-note"><span>✦</span><strong>Leitura que transforma</strong><small>Biblioteca • EE 11 de Outubro</small></div>
           </div>
-        </div>
-
-        <div class="public-paths" aria-label="Acessos da biblioteca">
-          <button type="button" data-public-nav="catalogo"><span class="path-icon">⌕</span><span><small>EXPLORE</small><strong>Acessar acervo</strong><em>Consulte os livros disponíveis e faça sua reserva.</em></span><b>→</b></button>
-          <button type="button" data-public-nav="emprestimos"><span class="path-icon">✓</span><span><small>ACOMPANHE</small><strong>Meus empréstimos</strong><em>Veja seus livros ativos usando seu Código SGDE.</em></span><b>→</b></button>
-          <button type="button" data-open-admin><span class="path-icon">⌘</span><span><small>ÁREA RESTRITA</small><strong>Acesso administrativo</strong><em>Gestão Escolar e profissionais da biblioteca.</em></span><b>→</b></button>
+          <div class="public-paths" aria-label="Acessos da biblioteca">
+            <button type="button" data-public-nav="catalogo"><span class="path-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg></span><span><small>EXPLORE</small><strong>Acessar acervo</strong><em>Consulte os livros disponíveis e faça sua reserva.</em></span><b>→</b></button>
+            <button type="button" data-public-nav="emprestimos"><span class="path-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></span><span><small>ACOMPANHE</small><strong>Meus empréstimos</strong><em>Veja seus livros ativos usando seu Código SGDE.</em></span><b>→</b></button>
+            <button type="button" data-open-admin><span class="path-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4v16M16 4v16M4 8h16M4 16h16"/></svg></span><span><small>ÁREA RESTRITA</small><strong>Acesso administrativo</strong><em>Gestão Escolar e profissionais da biblioteca.</em></span><b>→</b></button>
+          </div>
         </div>
       </section>
 
@@ -166,6 +160,11 @@
     </main>
 
     <footer class="public-footer">EE 11 de Outubro • Biblioteca Escolar</footer>
+    <nav class="public-bottom-nav" aria-label="Navegação móvel">
+      <button type="button" data-public-nav="inicio"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5v8a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Início</span></button>
+      <button type="button" data-public-nav="catalogo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2zm2 0v16"/></svg><span>Acervo</span></button>
+      <button type="button" data-public-nav="emprestimos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18H6zM9 8h6m-6 4h6m-6 4h3"/></svg><span>Empréstimos</span></button>
+    </nav>
   </section>
 
   <section class="reservation-modal" id="reservationModal" role="dialog" aria-modal="true" aria-labelledby="reservationTitle" hidden>
@@ -208,7 +207,7 @@
         <h1>Histórias circulam.<br /><em>A escola cresce.</em></h1>
         <p>Um espaço seguro para organizar o acervo, acompanhar solicitações e aproximar leitores de novos livros.</p>
       </div>
-      <div class="auth-image" aria-hidden="true"><img src="/assets/estudantes-biblioteca.png" alt="" /></div>
+      <div class="auth-image" aria-hidden="true"><img src="/assets/estudantes-lendo-biblioteca-v2.png" alt="" /></div>
     </div>
 
     <div class="auth-panel">
@@ -332,7 +331,7 @@
               <button class="ghost-button" type="button" data-action="devolucao">Registrar devolução</button>
             </div>
           </div>
-          <div class="hero-visual" aria-hidden="true"><img src="/assets/estudantes-biblioteca.png" alt="" /></div>
+          <div class="hero-visual" aria-hidden="true"><img src="/assets/estudantes-lendo-biblioteca-v2.png" alt="" /></div>
           <span class="hero-circle circle-one"></span><span class="hero-circle circle-two"></span>
         </section>
 
@@ -451,7 +450,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="/config.js"></script>
   <script src="/supabase-client.js"></script>
-  <script src="/portal.js?v=0.8.3"></script>
-  <script src="/app.js?v=0.8.3"></script>
+  <script src="/portal.js?v=0.9.0"></script>
+  <script src="/app.js?v=0.9.0"></script>
 </body>
 </html>
