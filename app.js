@@ -128,6 +128,40 @@
     );
   }
 
+  function originalCatalogMetadata(book) {
+    return window.BIBLIOTECA_CATALOG_METADATA?.[normalizeSearch(book?.titulo)] || null;
+  }
+
+  function mergeCatalogMetadata(book, databaseMetadata = null) {
+    const merged = { ...book };
+    const reference = originalCatalogMetadata(book);
+    const fields = [
+      'ordem_planilha',
+      'genero_codigo',
+      'classificacao_numero',
+      'classificacao_cor',
+      'classificacao_cor_hex'
+    ];
+
+    if (reference) {
+      fields.forEach((field) => {
+        if ((merged[field] === null || merged[field] === undefined || merged[field] === '') && reference[field] !== null) {
+          merged[field] = reference[field];
+        }
+      });
+    }
+
+    if (databaseMetadata) {
+      fields.forEach((field) => {
+        if (databaseMetadata[field] !== null && databaseMetadata[field] !== undefined && databaseMetadata[field] !== '') {
+          merged[field] = databaseMetadata[field];
+        }
+      });
+    }
+
+    return merged;
+  }
+
   function copyFieldValue(row, selector) {
     return String(row?.querySelector(selector)?.value || '').trim();
   }
@@ -435,13 +469,15 @@
         .in('id', ids);
       if (error) {
         console.info('Classificação detalhada aguardando atualização do banco.');
-        return catalog.sort((a, b) => a.titulo.localeCompare(b.titulo, 'pt-BR'));
+        return catalog
+          .map((book) => mergeCatalogMetadata(book))
+          .sort((a, b) => a.titulo.localeCompare(b.titulo, 'pt-BR'));
       }
       metadata.push(...(data || []));
     }
     const byId = new Map(metadata.map((item) => [item.id, item]));
     return catalog
-      .map((book) => ({ ...book, ...(byId.get(book.id) || {}) }))
+      .map((book) => mergeCatalogMetadata(book, byId.get(book.id)))
       .sort((a, b) => a.titulo.localeCompare(b.titulo, 'pt-BR'));
   }
 
@@ -467,7 +503,17 @@
       { key: 'todos', label: 'Todos', count: catalogCache.length },
       ...[...categories.entries()]
         .map(([key, value]) => ({ key, ...value }))
-        .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'))
+        .sort((a, b) => {
+          const preferred = ['literatura juvenil', 'contos', 'literatura estrangeira', 'drama', 'hq'];
+          const aIndex = preferred.indexOf(normalizeSearch(a.label));
+          const bIndex = preferred.indexOf(normalizeSearch(b.label));
+          if (aIndex !== -1 || bIndex !== -1) {
+            if (aIndex === -1) return 1;
+            if (bIndex === -1) return -1;
+            return aIndex - bIndex;
+          }
+          return a.label.localeCompare(b.label, 'pt-BR');
+        })
     ];
 
     catalogCategories.replaceChildren(...options.map((option) => {
@@ -477,7 +523,9 @@
       button.dataset.category = option.key;
       button.classList.toggle('active', option.key === selectedCategory);
       button.setAttribute('aria-pressed', String(option.key === selectedCategory));
-      button.textContent = `${option.label} (${formatNumber(option.count)})`;
+      button.textContent = option.key === 'todos'
+        ? `${option.label} (${formatNumber(option.count)})`
+        : option.label;
       return button;
     }));
 
@@ -549,10 +597,10 @@
       const cover = book.capa_url
         ? `<img src="${escapeHtml(book.capa_url)}" alt="Capa de ${escapeHtml(book.titulo)}" loading="lazy" />`
         : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2zm2 0v16m3-12h6m-6 4h6"/></svg>';
+      const classification = [book.genero_codigo, book.classificacao_numero].filter(Boolean).join(' • ');
       const metadata = [
-        book.ordem_planilha ? `Ordem ${String(book.ordem_planilha).padStart(3, '0')}` : null,
-        book.categoria,
-        [book.genero_codigo, book.classificacao_numero].filter(Boolean).join(' • ') || null,
+        book.ordem_planilha ? `Ordem ${String(book.ordem_planilha).padStart(3, '0')}` : 'Ordem não informada',
+        classification || book.categoria || 'Classificação não informada',
         book.ano_publicacao,
         book.isbn ? `ISBN ${book.isbn}` : null
       ]
@@ -562,7 +610,7 @@
       const color = classificationColor(book);
       const colorTag = book.classificacao_cor
         ? `<span class="classification-color-tag" style="--classification-color:${color}">${escapeHtml(book.classificacao_cor)}</span>`
-        : '';
+        : `<span class="classification-color-tag is-empty" style="--classification-color:${color}">Cor não informada</span>`;
 
       return `<article class="catalog-card" data-book-id="${escapeHtml(book.id)}" style="--classification-color:${color}">
         <div class="book-cover">${cover}</div>
@@ -575,7 +623,7 @@
             </button>
           </div>
           <p class="catalog-author">${escapeHtml(book.autor)}</p>
-          <div class="catalog-meta">${metadata || '<span>Sem categoria</span>'}${colorTag}</div>
+          <div class="catalog-meta">${metadata}${colorTag}</div>
           <div class="availability-line"><strong class="${available ? '' : 'unavailable'}">${available ? `${available} disponível${available === 1 ? '' : 'is'}` : 'Indisponível'}</strong><span>${total} exemplar${total === 1 ? '' : 'es'}</span></div>
         </div>
       </article>`;

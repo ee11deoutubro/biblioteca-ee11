@@ -24,7 +24,8 @@ const requiredFiles = [
   'assets/logo-escola.png',
   'assets/cabecalho-escola.png',
   'assets/fundo-inicio-desktop.png',
-  'assets/fundo-inicio-mobile.png'
+  'assets/fundo-inicio-mobile.png',
+  'catalogo-metadata-original.js'
 ];
 
 await Promise.all(requiredFiles.map((file) => access(new URL(`../${file}`, import.meta.url))));
@@ -54,7 +55,8 @@ for (const reference of [
   '/supabase-client.js',
   '/assets/logo-escola.png',
   '/assets/fundo-inicio-desktop.png',
-  '/assets/fundo-inicio-mobile.png'
+  '/assets/fundo-inicio-mobile.png',
+  '/catalogo-metadata-original.js'
 ]) {
   if (!html.includes(reference)) {
     throw new Error(`Referência obrigatória ausente no index.html: ${reference}`);
@@ -97,6 +99,13 @@ if (/localStorage\.(getItem|setItem)\(key/.test(appScript)) {
 for (const feature of ['renderCategoryTabs', 'openEditBookForm', 'saveEditedBook', 'renderCopyFields', 'tombamento']) {
   if (!appScript.includes(feature)) {
     throw new Error(`Recurso do acervo ausente: ${feature}`);
+  }
+}
+
+const catalogMetadata = await readFile(new URL('../catalogo-metadata-original.js', import.meta.url), 'utf8');
+for (const title of ['6 vezes lucas', 'a botija', '25 contos de machado de assis']) {
+  if (!catalogMetadata.includes(`\"${title}\"`)) {
+    throw new Error(`Metadado original ausente para: ${title}`);
   }
 }
 

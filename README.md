@@ -1,4 +1,4 @@
-# Biblioteca EE 11 de Outubro — versão 0.11.1
+# Biblioteca EE 11 de Outubro — versão 0.11.2
 
 Esta versão usa as artes limpas e inalteradas somente como fundo da tela inicial. Cabeçalho, brasão, textos, cartões e navegação são elementos reais do APP em HTML e CSS.
 
@@ -11,6 +11,7 @@ No celular, o menu superior permanece removido por ser redundante com os cartõe
 - Tombamento vinculado a cada exemplar físico, permitindo números patrimoniais diferentes para exemplares do mesmo título.
 - Localização, conservação e origem editáveis individualmente em cada exemplar.
 - Campos ausentes na planilha podem ser completados posteriormente pela ação **Editar**.
+- A ordem, o código, a localização e as cores da planilha original aparecem como referência nos cartões enquanto esses campos ainda não estiverem preenchidos no banco; alterações salvas pelo formulário têm prioridade.
 
 MVP online para gestão da biblioteca escolar da EE 11 de Outubro.
 
