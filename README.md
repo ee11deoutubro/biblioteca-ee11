@@ -1,14 +1,16 @@
-# Biblioteca EE 11 de Outubro — versão 0.10.1
+# Biblioteca EE 11 de Outubro — versão 0.11.0
 
 Esta versão usa as artes limpas e inalteradas somente como fundo da tela inicial. Cabeçalho, brasão, textos, cartões e navegação são elementos reais do APP em HTML e CSS.
 
 No celular, o menu superior permanece removido por ser redundante com os cartões centrais e a barra de navegação inferior.
 
-## Próxima revisão do cadastro de livros
+## Cadastro e classificação do acervo
 
-- Classificação dos gêneros por número e cor definidos pela biblioteca.
-- Campo de tombamento vinculado a cada exemplar físico, permitindo tombamentos diferentes para exemplares do mesmo título.
-- Revisão do formulário e do fluxo de cadastro antes da implementação no banco de dados.
+- Número de ordem preservado da planilha original.
+- Classificação por gênero, código, número e cor definidos pela biblioteca.
+- Tombamento vinculado a cada exemplar físico, permitindo números patrimoniais diferentes para exemplares do mesmo título.
+- Localização, conservação e origem editáveis individualmente em cada exemplar.
+- Campos ausentes na planilha podem ser completados posteriormente pela ação **Editar**.
 
 MVP online para gestão da biblioteca escolar da EE 11 de Outubro.
 
@@ -84,8 +86,12 @@ existente, evitando cadastros redundantes. As capas são armazenadas no bucket
 
 Os títulos podem ser pesquisados, filtrados por disponibilidade e separados
 pelas abas de gênero/categoria geradas automaticamente. A ação **Editar** permite
-alterar os dados do título e enviar ou substituir sua capa sem modificar os
-exemplares já cadastrados.
+alterar os dados do título, enviar ou substituir sua capa e atualizar o
+tombamento, a localização, a conservação e a origem de cada exemplar.
+
+Antes de publicar esta versão, execute uma única vez no SQL Editor do Supabase o
+arquivo `atualizar-catalogo-classificacao-tombamento.sql`. Ele acrescenta os
+campos novos sem apagar ou modificar os títulos e exemplares existentes.
 
 Depois desta atualização, execute uma única vez no SQL Editor do Supabase o
 arquivo `atualizar-permissoes-gestao.sql`. Ele autoriza tanto **Gestão Escolar**

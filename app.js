@@ -53,6 +53,8 @@
   const bookFormTitle = document.getElementById('bookFormTitle');
   const bookFormDescription = document.getElementById('bookFormDescription');
   const editCoverPreview = document.getElementById('editCoverPreview');
+  const copyFieldsList = document.getElementById('copyFieldsList');
+  const copyFieldsHelp = document.getElementById('copyFieldsHelp');
   const refreshRequests = document.getElementById('refreshRequests');
   const requestStatusFilter = document.getElementById('requestStatusFilter');
   const requestCount = document.getElementById('requestCount');
@@ -69,6 +71,20 @@
   let editingCoverUrl = null;
   let pendingEditBookId = null;
   let requestsCache = [];
+  let editingCopies = [];
+
+  const CLASSIFICATION_COLORS = Object.freeze({
+    Azul: '#2563eb',
+    Amarelo: '#eab308',
+    Laranja: '#f59e0b',
+    Rosa: '#ec4899',
+    Verde: '#16a34a',
+    Vermelho: '#dc2626',
+    Roxo: '#7c3aed',
+    Marrom: '#92400e',
+    Preto: '#111827',
+    Branco: '#cbd5e1'
+  });
 
   function readStorage(key, fallback) {
     try {
@@ -96,6 +112,59 @@
 
   function categoryKey(value) {
     return value ? normalizeSearch(value) : '__sem_categoria__';
+  }
+
+  function validHexColor(value, fallback = '#1768d4') {
+    const color = String(value || '').trim();
+    return /^#[0-9a-f]{6}$/i.test(color) ? color : fallback;
+  }
+
+  function classificationColor(book) {
+    return validHexColor(
+      book?.classificacao_cor_hex || CLASSIFICATION_COLORS[book?.classificacao_cor],
+      '#1768d4'
+    );
+  }
+
+  function copyFieldValue(row, selector) {
+    return String(row?.querySelector(selector)?.value || '').trim();
+  }
+
+  function copyRowsPayload() {
+    return [...(copyFieldsList?.querySelectorAll('[data-copy-row]') || [])].map((row, index) => ({
+      id: row.dataset.copyId || null,
+      numero_exemplar: Number(row.dataset.copyNumber) || index + 1,
+      tombamento: copyFieldValue(row, '[data-copy-field="tombamento"]') || null,
+      localizacao: copyFieldValue(row, '[data-copy-field="localizacao"]') || null,
+      conservacao: copyFieldValue(row, '[data-copy-field="conservacao"]') || 'bom',
+      origem: copyFieldValue(row, '[data-copy-field="origem"]') || null
+    }));
+  }
+
+  function renderCopyFields(quantity = 1, copies = []) {
+    if (!copyFieldsList) return;
+    const total = Math.max(1, Math.min(100, Number(quantity) || copies.length || 1));
+    const defaultLocation = String(bookForm?.elements.namedItem('localizacao')?.value || '').trim();
+    const defaultOrigin = String(bookForm?.elements.namedItem('origem')?.value || '').trim();
+    const options = (items, selected) => items.map(([value, label]) =>
+      `<option value="${escapeHtml(value)}" ${value === selected ? 'selected' : ''}>${escapeHtml(label)}</option>`
+    ).join('');
+    const conservationOptions = [['novo', 'Novo'], ['otimo', 'Ótimo'], ['bom', 'Bom'], ['regular', 'Regular'], ['danificado', 'Danificado']];
+    const originOptions = [['', 'Não informada'], ['Compra', 'Compra'], ['Doação', 'Doação'], ['PNLD', 'PNLD'], ['Outro', 'Outro']];
+
+    copyFieldsList.innerHTML = Array.from({ length: total }, (_, index) => {
+      const copy = copies[index] || {};
+      const copyNumber = Number(copy.numero_exemplar) || index + 1;
+      const location = copy.localizacao ?? defaultLocation;
+      const origin = copy.origem ?? defaultOrigin;
+      return `<div class="copy-field-row" data-copy-row data-copy-id="${escapeHtml(copy.id || '')}" data-copy-number="${copyNumber}">
+        <div class="copy-field-identity"><strong>Exemplar ${copyNumber}</strong><span>${escapeHtml(copy.codigo || 'Código gerado ao salvar')}</span></div>
+        <label class="app-field"><span>Tombamento</span><input type="text" maxlength="80" value="${escapeHtml(copy.tombamento || '')}" placeholder="Número patrimonial" data-copy-field="tombamento" /></label>
+        <label class="app-field"><span>Localização</span><input type="text" maxlength="80" value="${escapeHtml(location || '')}" placeholder="Ex.: 6V" data-copy-field="localizacao" /></label>
+        <label class="app-field copy-field-conservation"><span>Conservação</span><select data-copy-field="conservacao">${options(conservationOptions, copy.conservacao || 'bom')}</select></label>
+        <label class="app-field copy-field-origin"><span>Origem</span><select data-copy-field="origem">${options(originOptions, origin || '')}</select></label>
+      </div>`;
+    }).join('');
   }
 
   function showToast(message) {
@@ -331,7 +400,7 @@
       .rpc('consultar_acervo_publico_atualizado');
 
     if (!refreshError) {
-      return (refreshedCatalog || []).sort((a, b) => a.titulo.localeCompare(b.titulo, 'pt-BR'));
+      return enrichCatalogClassification(client, refreshedCatalog || []);
     }
 
     const pageSize = 1000;
@@ -349,7 +418,29 @@
       if (!data || data.length < pageSize) break;
     }
 
-    return catalog;
+    return enrichCatalogClassification(client, catalog);
+  }
+
+  async function enrichCatalogClassification(client, catalog) {
+    if (!catalog.length) return [];
+    const metadata = [];
+    const pageSize = 1000;
+    for (let start = 0; start < catalog.length; start += pageSize) {
+      const ids = catalog.slice(start, start + pageSize).map((book) => book.id);
+      const { data, error } = await client
+        .from('livros')
+        .select('id,ordem_planilha,genero_codigo,classificacao_numero,classificacao_cor,classificacao_cor_hex')
+        .in('id', ids);
+      if (error) {
+        console.info('Classificação detalhada aguardando atualização do banco.');
+        return catalog.sort((a, b) => a.titulo.localeCompare(b.titulo, 'pt-BR'));
+      }
+      metadata.push(...(data || []));
+    }
+    const byId = new Map(metadata.map((item) => [item.id, item]));
+    return catalog
+      .map((book) => ({ ...book, ...(byId.get(book.id) || {}) }))
+      .sort((a, b) => a.titulo.localeCompare(b.titulo, 'pt-BR'));
   }
 
   function renderCategoryTabs() {
@@ -400,7 +491,11 @@
         book.autor,
         book.isbn,
         book.categoria,
-        book.editora
+        book.editora,
+        book.ordem_planilha,
+        book.genero_codigo,
+        book.classificacao_numero,
+        book.classificacao_cor
       ].filter(Boolean).join(' '));
       const matchesQuery = !query || searchable.includes(query);
       const matchesCategory = selectedCategory === 'todos'
@@ -430,12 +525,22 @@
       const cover = book.capa_url
         ? `<img src="${escapeHtml(book.capa_url)}" alt="Capa de ${escapeHtml(book.titulo)}" loading="lazy" />`
         : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2zm2 0v16m3-12h6m-6 4h6"/></svg>';
-      const metadata = [book.categoria, book.ano_publicacao, book.isbn ? `ISBN ${book.isbn}` : null]
+      const metadata = [
+        book.ordem_planilha ? `Ordem ${String(book.ordem_planilha).padStart(3, '0')}` : null,
+        book.categoria,
+        [book.genero_codigo, book.classificacao_numero].filter(Boolean).join(' • ') || null,
+        book.ano_publicacao,
+        book.isbn ? `ISBN ${book.isbn}` : null
+      ]
         .filter(Boolean)
         .map((item) => `<span>${escapeHtml(item)}</span>`)
         .join('');
+      const color = classificationColor(book);
+      const colorTag = book.classificacao_cor
+        ? `<span class="classification-color-tag" style="--classification-color:${color}">${escapeHtml(book.classificacao_cor)}</span>`
+        : '';
 
-      return `<article class="catalog-card" data-book-id="${escapeHtml(book.id)}">
+      return `<article class="catalog-card" data-book-id="${escapeHtml(book.id)}" style="--classification-color:${color}">
         <div class="book-cover">${cover}</div>
         <div class="catalog-card-content">
           <div class="catalog-title-row">
@@ -446,7 +551,7 @@
             </button>
           </div>
           <p class="catalog-author">${escapeHtml(book.autor)}</p>
-          <div class="catalog-meta">${metadata || '<span>Sem categoria</span>'}</div>
+          <div class="catalog-meta">${metadata || '<span>Sem categoria</span>'}${colorTag}</div>
           <div class="availability-line"><strong class="${available ? '' : 'unavailable'}">${available ? `${available} disponível${available === 1 ? '' : 'is'}` : 'Indisponível'}</strong><span>${total} exemplar${total === 1 ? '' : 'es'}</span></div>
         </div>
       </article>`;
@@ -699,8 +804,8 @@
     bookFormKicker.textContent = isEditing ? 'EDITAR TÍTULO' : 'NOVO CADASTRO';
     bookFormTitle.textContent = isEditing ? 'Editar informações do título' : 'Cadastrar título e exemplares';
     bookFormDescription.textContent = isEditing
-      ? 'Altere os dados do título ou selecione uma nova imagem para substituir a capa.'
-      : 'Informe os dados do título e quantos exemplares físicos serão cadastrados.';
+      ? 'Altere os dados bibliográficos, a classificação, a capa ou a identificação dos exemplares.'
+      : 'Preencha o que estiver disponível. As informações que faltarem poderão ser completadas depois.';
     saveBookButton.querySelector('span').textContent = isEditing ? 'Salvar alterações' : 'Salvar no acervo';
 
     document.querySelectorAll('[data-create-only]').forEach((field) => {
@@ -708,6 +813,11 @@
     });
     const quantityField = bookForm?.elements.namedItem('quantidade');
     if (quantityField) quantityField.required = !isEditing;
+    if (!isEditing) {
+      editingCopies = [];
+      renderCopyFields(Number(quantityField?.value) || 1);
+      if (copyFieldsHelp) copyFieldsHelp.textContent = 'O tombamento pode ficar em branco agora e ser preenchido posteriormente na edição do título.';
+    }
 
     if (editCoverPreview) {
       editCoverPreview.replaceChildren();
@@ -735,7 +845,13 @@
       isbn: book.isbn,
       categoria: book.categoria,
       editora: book.editora,
-      ano_publicacao: book.ano_publicacao
+      ano_publicacao: book.ano_publicacao,
+      ordem_planilha: book.ordem_planilha,
+      genero_codigo: book.genero_codigo,
+      classificacao_numero: book.classificacao_numero,
+      classificacao_cor: book.classificacao_cor,
+      classificacao_cor_hex: classificationColor(book),
+      localizacao: book.localizacao
     };
     Object.entries(values).forEach(([name, value]) => {
       const field = bookForm.elements.namedItem(name);
@@ -759,7 +875,7 @@
     bookForm?.elements.namedItem('titulo')?.focus({ preventScroll: true });
   }
 
-  function openEditBookForm(bookId, options = {}) {
+  async function openEditBookForm(bookId, options = {}) {
     const book = catalogCache.find((item) => item.id === bookId);
     if (!book || !bookFormPanel) {
       showToast('Não foi possível localizar este título.');
@@ -774,11 +890,45 @@
     }
     setBookFormMode('edit', book);
     bookFormPanel.hidden = false;
+    if (copyFieldsList) copyFieldsList.innerHTML = '<div class="copy-loading">Carregando exemplares e tombamentos...</div>';
     writeStorage(NAVIGATION_KEY, {
       activeView: 'Acervo',
       activeActivity: `editar-livro:${book.id}`
     });
     setBookFormFeedback();
+    const client = window.bibliotecaSupabase;
+    if (client) {
+      let { data: copies, error } = await client
+        .from('exemplares')
+        .select('id,codigo,numero_exemplar,tombamento,conservacao,localizacao,origem,status')
+        .eq('livro_id', book.id)
+        .eq('ativo', true)
+        .order('numero_exemplar', { ascending: true });
+      if (error && String(error.message || '').includes('tombamento')) {
+        const fallback = await client
+          .from('exemplares')
+          .select('id,codigo,numero_exemplar,conservacao,localizacao,origem,status')
+          .eq('livro_id', book.id)
+          .eq('ativo', true)
+          .order('numero_exemplar', { ascending: true });
+        copies = fallback.data;
+        error = fallback.error;
+      }
+      if (error) {
+        setBookFormFeedback('Não foi possível carregar os exemplares deste título.');
+        renderCopyFields(1);
+      } else {
+        editingCopies = copies || [];
+        const locationField = bookForm?.elements.namedItem('localizacao');
+        if (locationField && !locationField.value && editingCopies[0]?.localizacao) {
+          locationField.value = editingCopies[0].localizacao;
+        }
+        renderCopyFields(editingCopies.length || 1, editingCopies);
+        if (copyFieldsHelp) copyFieldsHelp.textContent = editingCopies.length
+          ? 'As alterações de tombamento, localização, conservação e origem serão aplicadas a cada exemplar.'
+          : 'Este título ainda não possui exemplar físico cadastrado.';
+      }
+    }
     if (options.scroll !== false) {
       bookFormPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
       bookForm?.elements.namedItem('titulo')?.focus({ preventScroll: true });
@@ -801,6 +951,7 @@
     if (bookFormPanel) bookFormPanel.hidden = true;
     editingBookId = null;
     editingCoverUrl = null;
+    editingCopies = [];
     if (!clear) {
       const state = readStorage(NAVIGATION_KEY, {});
       writeStorage(NAVIGATION_KEY, { ...state, activeActivity: null });
@@ -851,10 +1002,16 @@
     const isbn = String(formData.get('isbn') || '').replace(/[^0-9Xx]/g, '').toUpperCase();
     const publicationYear = Number(formData.get('ano_publicacao')) || null;
     const coverFile = formData.get('capa');
+    const copies = copyRowsPayload().filter((copy) => copy.id);
+    const tombamentos = copies.map((copy) => copy.tombamento).filter(Boolean);
 
     if (!title || !author) {
       setBookFormFeedback('Preencha o título e o autor.');
       (!title ? bookForm.elements.namedItem('titulo') : bookForm.elements.namedItem('autor'))?.focus();
+      return;
+    }
+    if (new Set(tombamentos.map((item) => normalizeSearch(item))).size !== tombamentos.length) {
+      setBookFormFeedback('Há tombamentos repetidos entre os exemplares deste título.');
       return;
     }
 
@@ -874,7 +1031,14 @@
         isbn: isbn || null,
         categoria: String(formData.get('categoria') || '').trim() || null,
         editora: String(formData.get('editora') || '').trim() || null,
-        ano_publicacao: publicationYear
+        ano_publicacao: publicationYear,
+        ordem_planilha: Number(formData.get('ordem_planilha')) || null,
+        genero_codigo: String(formData.get('genero_codigo') || '').trim().toUpperCase() || null,
+        classificacao_numero: String(formData.get('classificacao_numero') || '').trim() || null,
+        classificacao_cor: String(formData.get('classificacao_cor') || '').trim() || null,
+        classificacao_cor_hex: formData.get('classificacao_cor')
+          ? validHexColor(formData.get('classificacao_cor_hex'))
+          : null
       };
       if (uploadedCover.url) payload.capa_url = uploadedCover.url;
 
@@ -883,6 +1047,19 @@
         .update(payload)
         .eq('id', book.id);
       if (error) throw error;
+
+      for (const copy of copies) {
+        const { error: copyError } = await client
+          .from('exemplares')
+          .update({
+            tombamento: copy.tombamento,
+            localizacao: copy.localizacao,
+            conservacao: copy.conservacao,
+            origem: copy.origem
+          })
+          .eq('id', copy.id);
+        if (copyError) throw copyError;
+      }
 
       if (uploadedCover.url && editingCoverUrl) {
         const oldPath = coverStoragePath(editingCoverUrl);
@@ -903,9 +1080,11 @@
       if (uploadedCover.path) await client.storage.from('capas-livros').remove([uploadedCover.path]);
       console.error('Falha ao editar título:', error);
       const message = String(error?.message || '');
-      setBookFormFeedback(message.includes('duplicate key')
-        ? 'Este ISBN já pertence a outro título.'
-        : (message || 'Não foi possível atualizar o título. Tente novamente.'));
+      setBookFormFeedback(message.includes('exemplares_tombamento_unico') || message.toLowerCase().includes('tombamento')
+        ? 'Este tombamento já pertence a outro exemplar.'
+        : (message.includes('duplicate key')
+          ? 'Este ISBN já pertence a outro título.'
+          : (message || 'Não foi possível atualizar o título. Tente novamente.')));
     } finally {
       saveBookButton.disabled = false;
       saveBookButton.querySelector('span').textContent = editingBookId ? 'Salvar alterações' : 'Salvar no acervo';
@@ -934,6 +1113,8 @@
     const quantity = Number(formData.get('quantidade'));
     const publicationYear = Number(formData.get('ano_publicacao')) || null;
     const coverFile = formData.get('capa');
+    const copyDetails = copyRowsPayload();
+    const tombamentos = copyDetails.map((copy) => copy.tombamento).filter(Boolean);
 
     if (!title || !author) {
       setBookFormFeedback('Preencha o título e o autor.');
@@ -943,6 +1124,15 @@
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) {
       setBookFormFeedback('Informe uma quantidade entre 1 e 100 exemplares.');
       bookForm.elements.namedItem('quantidade')?.focus();
+      return;
+    }
+    if (copyDetails.length !== quantity) {
+      renderCopyFields(quantity);
+      setBookFormFeedback('Confira os dados dos exemplares antes de salvar.');
+      return;
+    }
+    if (new Set(tombamentos.map((item) => normalizeSearch(item))).size !== tombamentos.length) {
+      setBookFormFeedback('Há tombamentos repetidos entre os exemplares informados.');
       return;
     }
 
@@ -980,6 +1170,13 @@
           categoria: String(formData.get('categoria') || '').trim() || null,
           editora: String(formData.get('editora') || '').trim() || null,
           ano_publicacao: publicationYear,
+          ordem_planilha: Number(formData.get('ordem_planilha')) || null,
+          genero_codigo: String(formData.get('genero_codigo') || '').trim().toUpperCase() || null,
+          classificacao_numero: String(formData.get('classificacao_numero') || '').trim() || null,
+          classificacao_cor: String(formData.get('classificacao_cor') || '').trim() || null,
+          classificacao_cor_hex: formData.get('classificacao_cor')
+            ? validHexColor(formData.get('classificacao_cor_hex'))
+            : null,
           capa_url: uploadedCover.url,
           criado_por: activeProfile.id
         };
@@ -1013,13 +1210,15 @@
       const codePrefix = book.id.replace(/-/g, '').slice(0, 8).toUpperCase();
       const copies = Array.from({ length: quantity }, (_, index) => {
         const copyNumber = firstNumber + index;
+        const detail = copyDetails[index] || {};
         return {
           livro_id: book.id,
           codigo: `BIB-${codePrefix}-${String(copyNumber).padStart(3, '0')}`,
           numero_exemplar: copyNumber,
-          conservacao: String(formData.get('conservacao') || 'bom'),
-          localizacao: String(formData.get('localizacao') || '').trim() || null,
-          origem: String(formData.get('origem') || '').trim() || null,
+          tombamento: detail.tombamento,
+          conservacao: detail.conservacao || 'bom',
+          localizacao: detail.localizacao || String(formData.get('localizacao') || '').trim() || null,
+          origem: detail.origem || String(formData.get('origem') || '').trim() || null,
           criado_por: activeProfile.id
         };
       });
@@ -1042,9 +1241,11 @@
       if (uploadedCover.path) await client.storage.from('capas-livros').remove([uploadedCover.path]);
       console.error('Falha ao cadastrar livro:', error);
       const message = String(error?.message || '');
-      setBookFormFeedback(message.includes('duplicate key')
-        ? 'Este ISBN já está cadastrado. Atualize o acervo e tente novamente.'
-        : (message || 'Não foi possível salvar o livro. Tente novamente.'));
+      setBookFormFeedback(message.includes('exemplares_tombamento_unico') || message.toLowerCase().includes('tombamento')
+        ? 'Um dos tombamentos já pertence a outro exemplar.'
+        : (message.includes('duplicate key')
+          ? 'Este ISBN já está cadastrado. Atualize o acervo e tente novamente.'
+          : (message || 'Não foi possível salvar o livro. Tente novamente.')));
     } finally {
       saveBookButton.disabled = false;
       saveBookButton.querySelector('span').textContent = 'Salvar no acervo';
@@ -1146,6 +1347,32 @@
   document.querySelectorAll('[data-persist]').forEach((field) => {
     field.addEventListener('input', () => saveField(field));
     field.addEventListener('change', () => saveField(field));
+  });
+
+  const quantityField = bookForm?.elements.namedItem('quantidade');
+  const locationField = bookForm?.elements.namedItem('localizacao');
+  const originField = bookForm?.elements.namedItem('origem');
+  const classificationColorField = bookForm?.elements.namedItem('classificacao_cor');
+  const classificationHexField = bookForm?.elements.namedItem('classificacao_cor_hex');
+
+  quantityField?.addEventListener('input', () => {
+    const quantity = Number(quantityField.value);
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) return;
+    renderCopyFields(quantity, copyRowsPayload());
+  });
+  locationField?.addEventListener('change', () => {
+    copyFieldsList?.querySelectorAll('[data-copy-field="localizacao"]').forEach((field) => {
+      field.value = locationField.value;
+    });
+  });
+  originField?.addEventListener('change', () => {
+    copyFieldsList?.querySelectorAll('[data-copy-field="origem"]').forEach((field) => {
+      field.value = originField.value;
+    });
+  });
+  classificationColorField?.addEventListener('change', () => {
+    const mapped = CLASSIFICATION_COLORS[classificationColorField.value];
+    if (mapped && classificationHexField) classificationHexField.value = mapped;
   });
 
   openBookForm?.addEventListener('click', openCatalogForm);

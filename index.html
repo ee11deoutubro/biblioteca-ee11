@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#071c4d" />
   <meta name="description" content="Sistema de gestão da Biblioteca da EE 11 de Outubro" />
-  <meta name="app-version" content="0.10.1" />
+  <meta name="app-version" content="0.11.0" />
   <meta property="og:locale" content="pt_BR" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Biblioteca 11 • EE 11 de Outubro" />
@@ -58,7 +58,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/styles.css?v=0.8.0" />
+  <link rel="stylesheet" href="/styles.css?v=0.11.0" />
   <link rel="stylesheet" href="/auth.css?v=0.8.0" />
   <link rel="stylesheet" href="/portal.css?v=0.8.0" />
   <link rel="stylesheet" href="/portal-interactions.css?v=0.8.3" />
@@ -406,22 +406,42 @@
         <nav class="category-tabs" id="catalogCategories" aria-label="Filtrar títulos por gênero"></nav>
 
         <section class="book-form-panel" id="bookFormPanel" data-activity-panel="cadastro-livro" hidden>
-          <div class="form-panel-heading"><div><span class="section-kicker" id="bookFormKicker">NOVO CADASTRO</span><h2 id="bookFormTitle">Cadastrar título e exemplares</h2><p id="bookFormDescription">Informe os dados do título e quantos exemplares físicos serão cadastrados.</p></div><button class="icon-close" id="closeBookForm" type="button" aria-label="Fechar cadastro">×</button></div>
+          <div class="form-panel-heading"><div><span class="section-kicker" id="bookFormKicker">NOVO CADASTRO</span><h2 id="bookFormTitle">Cadastrar título e exemplares</h2><p id="bookFormDescription">Preencha o que estiver disponível. As informações que faltarem poderão ser completadas depois.</p></div><button class="icon-close" id="closeBookForm" type="button" aria-label="Fechar cadastro">×</button></div>
           <form id="bookForm" novalidate>
-            <div class="form-grid">
-              <label class="app-field field-wide"><span>Título *</span><input name="titulo" type="text" required maxlength="180" data-persist="livro-titulo" data-activity="cadastro-livro" /></label>
-              <label class="app-field"><span>Autor *</span><input name="autor" type="text" required maxlength="150" data-persist="livro-autor" data-activity="cadastro-livro" /></label>
-              <label class="app-field"><span>ISBN</span><input name="isbn" type="text" inputmode="numeric" maxlength="20" placeholder="Somente números" data-persist="livro-isbn" data-activity="cadastro-livro" /></label>
-              <label class="app-field"><span>Categoria</span><input name="categoria" type="text" maxlength="80" placeholder="Ex.: Literatura brasileira" data-persist="livro-categoria" data-activity="cadastro-livro" /></label>
-              <label class="app-field"><span>Editora</span><input name="editora" type="text" maxlength="100" data-persist="livro-editora" data-activity="cadastro-livro" /></label>
-              <label class="app-field"><span>Ano de publicação</span><input name="ano_publicacao" type="number" min="1000" max="2200" inputmode="numeric" data-persist="livro-ano" data-activity="cadastro-livro" /></label>
-              <label class="app-field" data-create-only><span>Quantidade de exemplares *</span><input name="quantidade" type="number" min="1" max="100" value="1" inputmode="numeric" required data-persist="livro-quantidade" data-activity="cadastro-livro" /></label>
-              <label class="app-field" data-create-only><span>Localização</span><input name="localizacao" type="text" maxlength="80" placeholder="Ex.: Estante A3" data-persist="livro-localizacao" data-activity="cadastro-livro" /></label>
-              <label class="app-field" data-create-only><span>Estado de conservação</span><select name="conservacao" data-persist="livro-conservacao" data-activity="cadastro-livro"><option value="novo">Novo</option><option value="otimo">Ótimo</option><option value="bom" selected>Bom</option><option value="regular">Regular</option><option value="danificado">Danificado</option></select></label>
-              <label class="app-field" data-create-only><span>Origem</span><select name="origem" data-persist="livro-origem" data-activity="cadastro-livro"><option value="">Não informado</option><option value="Compra">Compra</option><option value="Doação">Doação</option><option value="PNLD">PNLD</option><option value="Outro">Outro</option></select></label>
-              <label class="app-field field-wide"><span>Capa do livro</span><input name="capa" type="file" accept="image/jpeg,image/png,image/webp" /><small>JPG, PNG ou WebP, com até 5 MB.</small></label>
-              <div class="edit-cover-preview field-wide" id="editCoverPreview" hidden></div>
-            </div>
+            <section class="book-form-section">
+              <div class="book-form-section-title"><span>1</span><div><h3>Dados do título</h3><p>Identificação bibliográfica da obra.</p></div></div>
+              <div class="form-grid">
+                <label class="app-field field-wide"><span>Título *</span><input name="titulo" type="text" required maxlength="180" data-persist="livro-titulo" data-activity="cadastro-livro" /></label>
+                <label class="app-field"><span>Autor ou autora *</span><input name="autor" type="text" required maxlength="150" data-persist="livro-autor" data-activity="cadastro-livro" /></label>
+                <label class="app-field"><span>ISBN</span><input name="isbn" type="text" inputmode="numeric" maxlength="20" placeholder="Somente números" data-persist="livro-isbn" data-activity="cadastro-livro" /></label>
+                <label class="app-field"><span>Editora</span><input name="editora" type="text" maxlength="100" data-persist="livro-editora" data-activity="cadastro-livro" /></label>
+                <label class="app-field"><span>Ano de publicação</span><input name="ano_publicacao" type="number" min="1000" max="2200" inputmode="numeric" placeholder="AAAA" data-persist="livro-ano" data-activity="cadastro-livro" /></label>
+                <label class="app-field"><span>Ordem da planilha</span><input name="ordem_planilha" type="number" min="1" inputmode="numeric" placeholder="Ex.: 38" data-persist="livro-ordem" data-activity="cadastro-livro" /><small>Mantém o número existente na tabela original.</small></label>
+                <label class="app-field"><span>Capa do livro</span><input name="capa" type="file" accept="image/jpeg,image/png,image/webp" /><small>JPG, PNG ou WebP, com até 5 MB.</small></label>
+                <div class="edit-cover-preview field-wide" id="editCoverPreview" hidden></div>
+              </div>
+            </section>
+
+            <section class="book-form-section">
+              <div class="book-form-section-title"><span>2</span><div><h3>Classificação e localização</h3><p>Gênero, código, número e cor usados pela biblioteca.</p></div></div>
+              <div class="form-grid">
+                <label class="app-field"><span>Gênero ou categoria</span><input name="categoria" type="text" maxlength="80" placeholder="Ex.: Literatura juvenil" data-persist="livro-categoria" data-activity="cadastro-livro" /></label>
+                <label class="app-field"><span>Código do gênero</span><input name="genero_codigo" type="text" maxlength="20" placeholder="Ex.: LJ, LBC, HQ" data-persist="livro-genero-codigo" data-activity="cadastro-livro" /></label>
+                <label class="app-field"><span>Número da classificação</span><input name="classificacao_numero" type="text" maxlength="20" inputmode="numeric" placeholder="Ex.: 6" data-persist="livro-classificacao-numero" data-activity="cadastro-livro" /></label>
+                <label class="app-field"><span>Cor da classificação</span><span class="classification-color-field"><select name="classificacao_cor" data-persist="livro-classificacao-cor" data-activity="cadastro-livro"><option value="">Não informada</option><option value="Azul">Azul</option><option value="Amarelo">Amarelo</option><option value="Laranja">Laranja</option><option value="Rosa">Rosa</option><option value="Verde">Verde</option><option value="Vermelho">Vermelho</option><option value="Roxo">Roxo</option><option value="Marrom">Marrom</option><option value="Preto">Preto</option><option value="Branco">Branco</option><option value="Personalizada">Personalizada</option></select><input name="classificacao_cor_hex" type="color" value="#1768d4" aria-label="Escolher cor personalizada" data-persist="livro-classificacao-cor-hex" data-activity="cadastro-livro" /></span></label>
+                <label class="app-field field-wide"><span>Localização geral</span><input name="localizacao" type="text" maxlength="80" placeholder="Ex.: 6V ou Estante A3" data-persist="livro-localizacao" data-activity="cadastro-livro" /><small>Será preenchida automaticamente nos exemplares e poderá ser alterada individualmente.</small></label>
+              </div>
+            </section>
+
+            <section class="book-form-section copies-form-section">
+              <div class="book-form-section-title"><span>3</span><div><h3>Exemplares físicos</h3><p>Cada unidade recebe seu próprio tombamento e estado de conservação.</p></div></div>
+              <div class="form-grid create-copy-controls" data-create-only>
+                <label class="app-field"><span>Quantidade de exemplares *</span><input name="quantidade" type="number" min="1" max="100" value="1" inputmode="numeric" required data-persist="livro-quantidade" data-activity="cadastro-livro" /></label>
+                <label class="app-field"><span>Origem padrão</span><select name="origem" data-persist="livro-origem" data-activity="cadastro-livro"><option value="">Não informada</option><option value="Compra">Compra</option><option value="Doação">Doação</option><option value="PNLD">PNLD</option><option value="Outro">Outro</option></select></label>
+              </div>
+              <div class="copy-fields-list" id="copyFieldsList" aria-live="polite"></div>
+              <p class="copy-fields-help" id="copyFieldsHelp">O tombamento pode ficar em branco agora e ser preenchido posteriormente na edição do título.</p>
+            </section>
             <p class="form-feedback" id="bookFormFeedback" role="alert" aria-live="polite"></p>
             <div class="form-actions"><button class="secondary-button" id="cancelBookForm" type="button">Cancelar</button><button class="primary-button" id="saveBookButton" type="submit"><span>Salvar no acervo</span></button></div>
           </form>
@@ -461,6 +481,6 @@
   <script src="/config.js"></script>
   <script src="/supabase-client.js"></script>
   <script src="/portal.js?v=0.10.1"></script>
-  <script src="/app.js?v=0.10.1"></script>
+  <script src="/app.js?v=0.11.0"></script>
 </body>
 </html>

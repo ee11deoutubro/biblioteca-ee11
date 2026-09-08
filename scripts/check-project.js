@@ -18,6 +18,7 @@ const requiredFiles = [
   'supabase-client.js',
   'atualizar-permissoes-gestao.sql',
   'ativar-reservas-online.sql',
+  'atualizar-catalogo-classificacao-tombamento.sql',
   'vercel.json',
   'api/health.js',
   'assets/logo-escola.png',
@@ -69,6 +70,11 @@ if (!html.includes('property="og:image"') || !html.includes('twitter:card')) {
 if (!html.includes('id="catalogCategories"') || !html.includes('id="editCoverPreview"')) {
   throw new Error('Os filtros por gênero ou a edição de capa estão incompletos.');
 }
+for (const catalogField of ['ordem_planilha', 'genero_codigo', 'classificacao_numero', 'classificacao_cor', 'copyFieldsList']) {
+  if (!html.includes(catalogField)) {
+    throw new Error(`Campo do novo cadastro ausente: ${catalogField}`);
+  }
+}
 if (!html.includes('id="publicPortal"') || !html.includes('id="reservationModal"')) {
   throw new Error('O catálogo público ou o fluxo de reserva está incompleto.');
 }
@@ -88,9 +94,19 @@ if (!appScript.includes('sessionStorage.getItem') || !appScript.includes('sessio
 if (/localStorage\.(getItem|setItem)\(key/.test(appScript)) {
   throw new Error('A navegação não pode permanecer salva após o APP ser fechado.');
 }
-for (const feature of ['renderCategoryTabs', 'openEditBookForm', 'saveEditedBook']) {
+for (const feature of ['renderCategoryTabs', 'openEditBookForm', 'saveEditedBook', 'renderCopyFields', 'tombamento']) {
   if (!appScript.includes(feature)) {
     throw new Error(`Recurso do acervo ausente: ${feature}`);
+  }
+}
+
+const catalogSql = await readFile(
+  new URL('../atualizar-catalogo-classificacao-tombamento.sql', import.meta.url),
+  'utf8'
+);
+for (const feature of ['ordem_planilha', 'genero_codigo', 'classificacao_numero', 'classificacao_cor_hex', 'exemplares_tombamento_unico']) {
+  if (!catalogSql.includes(feature)) {
+    throw new Error(`Atualização do catálogo incompleta: ${feature}`);
   }
 }
 
