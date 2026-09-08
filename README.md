@@ -1,4 +1,4 @@
-# Biblioteca EE 11 de Outubro — versão 0.11.2
+# Biblioteca EE 11 de Outubro — versão 0.11.4
 
 Esta versão usa as artes limpas e inalteradas somente como fundo da tela inicial. Cabeçalho, brasão, textos, cartões e navegação são elementos reais do APP em HTML e CSS.
 
@@ -12,6 +12,7 @@ No celular, o menu superior permanece removido por ser redundante com os cartõe
 - Localização, conservação e origem editáveis individualmente em cada exemplar.
 - Campos ausentes na planilha podem ser completados posteriormente pela ação **Editar**.
 - A ordem, o código, a localização e as cores da planilha original aparecem como referência nos cartões enquanto esses campos ainda não estiverem preenchidos no banco; alterações salvas pelo formulário têm prioridade.
+- As cores existentes na planilha original são Verde, Amarela, Rosa e Laranja. Títulos sem cor usam indicador e faixa lateral cinza, sem classificação presumida.
 
 MVP online para gestão da biblioteca escolar da EE 11 de Outubro.
 

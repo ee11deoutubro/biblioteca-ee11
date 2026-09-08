@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#071c4d" />
   <meta name="description" content="Sistema de gestão da Biblioteca da EE 11 de Outubro" />
-  <meta name="app-version" content="0.11.1" />
+  <meta name="app-version" content="0.11.4" />
   <meta property="og:locale" content="pt_BR" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Biblioteca 11 • EE 11 de Outubro" />
@@ -435,7 +435,7 @@
                 <label class="app-field"><span>Gênero ou categoria</span><input name="categoria" type="text" maxlength="80" placeholder="Ex.: Literatura juvenil" data-persist="livro-categoria" data-activity="cadastro-livro" /></label>
                 <label class="app-field"><span>Código do gênero</span><input name="genero_codigo" type="text" maxlength="20" placeholder="Ex.: LJ, LBC, HQ" data-persist="livro-genero-codigo" data-activity="cadastro-livro" /></label>
                 <label class="app-field"><span>Número da classificação</span><input name="classificacao_numero" type="text" maxlength="20" inputmode="numeric" placeholder="Ex.: 6" data-persist="livro-classificacao-numero" data-activity="cadastro-livro" /></label>
-                <label class="app-field"><span>Cor da classificação</span><span class="classification-color-field"><select name="classificacao_cor" data-persist="livro-classificacao-cor" data-activity="cadastro-livro"><option value="">Não informada</option><option value="Azul">Azul</option><option value="Amarelo">Amarelo</option><option value="Laranja">Laranja</option><option value="Rosa">Rosa</option><option value="Verde">Verde</option><option value="Vermelho">Vermelho</option><option value="Roxo">Roxo</option><option value="Marrom">Marrom</option><option value="Preto">Preto</option><option value="Branco">Branco</option><option value="Personalizada">Personalizada</option></select><input name="classificacao_cor_hex" type="color" value="#1768d4" aria-label="Escolher cor personalizada" data-persist="livro-classificacao-cor-hex" data-activity="cadastro-livro" /></span></label>
+                <label class="app-field"><span>Cor da classificação</span><span class="classification-color-field"><select name="classificacao_cor" data-persist="livro-classificacao-cor" data-activity="cadastro-livro"><option value="">Não informada</option><option value="Verde">Verde</option><option value="Amarela">Amarela</option><option value="Rosa">Rosa</option><option value="Laranja">Laranja</option><option value="Personalizada">Personalizada</option></select><input name="classificacao_cor_hex" type="color" value="#94a3b8" aria-label="Escolher cor personalizada" data-persist="livro-classificacao-cor-hex" data-activity="cadastro-livro" /></span></label>
                 <label class="app-field field-wide"><span>Localização geral</span><input name="localizacao" type="text" maxlength="80" placeholder="Ex.: 6V ou Estante A3" data-persist="livro-localizacao" data-activity="cadastro-livro" /><small>Será preenchida automaticamente nos exemplares e poderá ser alterada individualmente.</small></label>
               </div>
             </section>
@@ -487,8 +487,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="/config.js"></script>
   <script src="/supabase-client.js"></script>
-  <script src="/catalogo-metadata-original.js?v=0.11.2"></script>
+  <script src="/catalogo-metadata-original.js?v=0.11.4"></script>
   <script src="/portal.js?v=0.10.1"></script>
-  <script src="/app.js?v=0.11.2"></script>
+  <script src="/app.js?v=0.11.4"></script>
 </body>
 </html>

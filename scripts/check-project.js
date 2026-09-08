@@ -101,12 +101,26 @@ for (const feature of ['renderCategoryTabs', 'openEditBookForm', 'saveEditedBook
     throw new Error(`Recurso do acervo ausente: ${feature}`);
   }
 }
+if (!appScript.includes("book?.classificacao_cor || 'Cor não informada'")) {
+  throw new Error('Títulos sem cor devem ser identificados sem classificação presumida.');
+}
 
 const catalogMetadata = await readFile(new URL('../catalogo-metadata-original.js', import.meta.url), 'utf8');
 for (const title of ['6 vezes lucas', 'a botija', '25 contos de machado de assis']) {
   if (!catalogMetadata.includes(`\"${title}\"`)) {
     throw new Error(`Metadado original ausente para: ${title}`);
   }
+}
+if (catalogMetadata.includes('"classificacao_cor":"Roxo"')) {
+  throw new Error('A planilha original não possui classificação roxa.');
+}
+for (const expectedColor of ['Verde', 'Amarela', 'Rosa', 'Laranja']) {
+  if (!catalogMetadata.includes(`"classificacao_cor":"${expectedColor}"`)) {
+    throw new Error(`Cor original ausente no catálogo: ${expectedColor}`);
+  }
+}
+if (!catalogMetadata.includes('"classificacao_cor":null,"classificacao_cor_hex":"#94a3b8"')) {
+  throw new Error('Livros sem cor precisam usar o indicador cinza.');
 }
 
 const catalogSql = await readFile(

@@ -76,16 +76,10 @@
   let editingCopies = [];
 
   const CLASSIFICATION_COLORS = Object.freeze({
-    Azul: '#2563eb',
-    Amarelo: '#eab308',
+    Amarela: '#eab308',
     Laranja: '#f59e0b',
     Rosa: '#ec4899',
-    Verde: '#16a34a',
-    Vermelho: '#dc2626',
-    Roxo: '#7c3aed',
-    Marrom: '#92400e',
-    Preto: '#111827',
-    Branco: '#cbd5e1'
+    Verde: '#16a34a'
   });
 
   function readStorage(key, fallback) {
@@ -124,8 +118,12 @@
   function classificationColor(book) {
     return validHexColor(
       book?.classificacao_cor_hex || CLASSIFICATION_COLORS[book?.classificacao_cor],
-      '#1768d4'
+      '#94a3b8'
     );
+  }
+
+  function classificationColorLabel(book) {
+    return book?.classificacao_cor || 'Cor não informada';
   }
 
   function originalCatalogMetadata(book) {
@@ -608,9 +606,8 @@
         .map((item) => `<span>${escapeHtml(item)}</span>`)
         .join('');
       const color = classificationColor(book);
-      const colorTag = book.classificacao_cor
-        ? `<span class="classification-color-tag" style="--classification-color:${color}">${escapeHtml(book.classificacao_cor)}</span>`
-        : `<span class="classification-color-tag is-empty" style="--classification-color:${color}">Cor não informada</span>`;
+      const colorLabel = classificationColorLabel(book);
+      const colorTag = `<span class="classification-color-tag${book.classificacao_cor ? '' : ' is-empty'}" style="--classification-color:${color}">${escapeHtml(colorLabel)}</span>`;
 
       return `<article class="catalog-card" data-book-id="${escapeHtml(book.id)}" style="--classification-color:${color}">
         <div class="book-cover">${cover}</div>

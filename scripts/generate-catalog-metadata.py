@@ -20,16 +20,10 @@ CATEGORIES = {
     "CONT": "Contos",
 }
 
-CATEGORY_COLORS = {
-    "LBC": "#f59e0b",
-    "LE": "#7c3aed",
-    "LJ": "#ec4899",
-    "CONT": "#2563eb",
-}
-
 COLOR_HEX = {
     "AZUL": "#2563eb",
     "AMARELO": "#eab308",
+    "AMARELA": "#eab308",
     "LARANJA": "#f59e0b",
     "ROSA": "#ec4899",
     "VERDE": "#16a34a",
@@ -80,7 +74,7 @@ for code, category in CATEGORIES.items():
             "genero_codigo": code,
             "classificacao_numero": location,
             "classificacao_cor": color_label,
-            "classificacao_cor_hex": COLOR_HEX.get(source_color, CATEGORY_COLORS[code]),
+            "classificacao_cor_hex": COLOR_HEX.get(source_color) if source_color else "#94a3b8",
         }
 
 payload = json.dumps(metadata, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
