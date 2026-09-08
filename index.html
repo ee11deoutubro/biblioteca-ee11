@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#071c4d" />
   <meta name="description" content="Sistema de gestão da Biblioteca da EE 11 de Outubro" />
-  <meta name="app-version" content="0.11.0" />
+  <meta name="app-version" content="0.11.1" />
   <meta property="og:locale" content="pt_BR" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Biblioteca 11 • EE 11 de Outubro" />
@@ -58,7 +58,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/styles.css?v=0.11.0" />
+  <link rel="stylesheet" href="/styles.css?v=0.11.1" />
   <link rel="stylesheet" href="/auth.css?v=0.8.0" />
   <link rel="stylesheet" href="/portal.css?v=0.8.0" />
   <link rel="stylesheet" href="/portal-interactions.css?v=0.8.3" />
@@ -388,18 +388,25 @@
 
       <main class="collection-view" data-view="Acervo" tabindex="-1" hidden>
         <section class="module-heading">
-          <div><p class="date-label">GESTÃO DA BIBLIOTECA</p><h1>Acervo</h1><p>Consulte os títulos cadastrados e a disponibilidade dos exemplares.</p></div>
+          <div><p class="date-label">GESTÃO DA BIBLIOTECA</p><h1>Acervo</h1><p>Consulte, classifique e atualize os títulos e seus exemplares.</p></div>
           <button class="primary-button" id="openBookForm" type="button">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Cadastrar novo título
           </button>
         </section>
 
-        <section class="collection-toolbar" aria-label="Ferramentas do acervo">
-          <label class="collection-search">
+        <nav class="catalog-view-switch" id="catalogViewSwitch" aria-label="Visualização do acervo">
+          <button class="active" type="button" data-catalog-availability="todos" aria-pressed="true">Todos os títulos</button>
+          <button type="button" data-catalog-availability="disponiveis" aria-pressed="false">Disponíveis</button>
+          <button type="button" data-catalog-availability="indisponiveis" aria-pressed="false">Sem disponibilidade</button>
+        </nav>
+
+        <section class="collection-toolbar catalog-approved-toolbar" aria-label="Ferramentas do acervo">
+          <label class="collection-search catalog-search-field"><span>Buscar no acervo</span><span class="collection-search-control">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-            <input id="catalogSearch" type="search" placeholder="Buscar por título, autor, ISBN ou categoria" autocomplete="off" data-persist="busca-acervo" />
-          </label>
-          <label class="collection-filter"><span>Situação</span><select id="catalogAvailability"><option value="todos">Todos</option><option value="disponiveis">Disponíveis</option><option value="indisponiveis">Sem disponibilidade</option></select></label>
+            <input id="catalogSearch" type="search" placeholder="Título, autor, ISBN ou tombamento" autocomplete="off" data-persist="busca-acervo" />
+          </span></label>
+          <label class="collection-filter"><span>Classificação</span><select id="catalogClassification"><option value="todos">Todos os gêneros</option></select></label>
+          <select id="catalogAvailability" aria-label="Situação do acervo" hidden><option value="todos">Todos</option><option value="disponiveis">Disponíveis</option><option value="indisponiveis">Sem disponibilidade</option></select>
           <button class="secondary-button" id="refreshCatalog" type="button">Atualizar</button>
         </section>
 
@@ -481,6 +488,6 @@
   <script src="/config.js"></script>
   <script src="/supabase-client.js"></script>
   <script src="/portal.js?v=0.10.1"></script>
-  <script src="/app.js?v=0.11.0"></script>
+  <script src="/app.js?v=0.11.1"></script>
 </body>
 </html>

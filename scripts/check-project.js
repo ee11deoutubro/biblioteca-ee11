@@ -70,7 +70,7 @@ if (!html.includes('property="og:image"') || !html.includes('twitter:card')) {
 if (!html.includes('id="catalogCategories"') || !html.includes('id="editCoverPreview"')) {
   throw new Error('Os filtros por gênero ou a edição de capa estão incompletos.');
 }
-for (const catalogField of ['ordem_planilha', 'genero_codigo', 'classificacao_numero', 'classificacao_cor', 'copyFieldsList']) {
+for (const catalogField of ['ordem_planilha', 'genero_codigo', 'classificacao_numero', 'classificacao_cor', 'copyFieldsList', 'catalogViewSwitch', 'catalogClassification']) {
   if (!html.includes(catalogField)) {
     throw new Error(`Campo do novo cadastro ausente: ${catalogField}`);
   }

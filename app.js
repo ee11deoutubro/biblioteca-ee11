@@ -42,6 +42,8 @@
   const catalogAvailable = document.getElementById('catalogAvailable');
   const refreshCatalog = document.getElementById('refreshCatalog');
   const catalogCategories = document.getElementById('catalogCategories');
+  const catalogClassification = document.getElementById('catalogClassification');
+  const catalogViewSwitch = document.getElementById('catalogViewSwitch');
   const bookFormPanel = document.getElementById('bookFormPanel');
   const bookForm = document.getElementById('bookForm');
   const openBookForm = document.getElementById('openBookForm');
@@ -478,6 +480,28 @@
       button.textContent = `${option.label} (${formatNumber(option.count)})`;
       return button;
     }));
+
+    if (catalogClassification) {
+      catalogClassification.replaceChildren(...options.map((option) => {
+        const item = document.createElement('option');
+        item.value = option.key;
+        item.textContent = option.key === 'todos'
+          ? 'Todos os gêneros'
+          : `${option.label} (${formatNumber(option.count)})`;
+        item.selected = option.key === selectedCategory;
+        return item;
+      }));
+    }
+  }
+
+  function syncCatalogAvailabilityControls(value = 'todos') {
+    const availability = ['todos', 'disponiveis', 'indisponiveis'].includes(value) ? value : 'todos';
+    if (catalogAvailability) catalogAvailability.value = availability;
+    catalogViewSwitch?.querySelectorAll('[data-catalog-availability]').forEach((button) => {
+      const active = button.dataset.catalogAvailability === availability;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
   }
 
   function renderCatalog() {
@@ -1380,7 +1404,22 @@
   cancelBookForm?.addEventListener('click', () => hideCatalogForm({ clear: true }));
   bookForm?.addEventListener('submit', saveBookAndCopies);
   catalogSearch?.addEventListener('input', renderCatalog);
-  catalogAvailability?.addEventListener('change', renderCatalog);
+  catalogAvailability?.addEventListener('change', () => {
+    syncCatalogAvailabilityControls(catalogAvailability.value);
+    renderCatalog();
+  });
+  catalogClassification?.addEventListener('change', () => {
+    selectedCategory = catalogClassification.value || 'todos';
+    writeStorage(CATEGORY_KEY, selectedCategory);
+    renderCategoryTabs();
+    renderCatalog();
+  });
+  catalogViewSwitch?.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-catalog-availability]');
+    if (!button) return;
+    syncCatalogAvailabilityControls(button.dataset.catalogAvailability);
+    renderCatalog();
+  });
   refreshCatalog?.addEventListener('click', () => refreshCompleteCatalog(true));
   refreshRequests?.addEventListener('click', () => loadAdminRequests(true));
   requestStatusFilter?.addEventListener('change', renderAdminRequests);

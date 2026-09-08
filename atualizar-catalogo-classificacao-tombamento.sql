@@ -1,6 +1,6 @@
 -- Biblioteca EE 11 de Outubro
 -- Acrescenta a classificação bibliotecária e o tombamento por exemplar.
--- Execute uma única vez no SQL Editor do Supabase antes de publicar a versão 0.11.0.
+-- Execute uma única vez no SQL Editor do Supabase antes de publicar a versão 0.11.1.
 
 begin;
 
