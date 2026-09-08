@@ -1,4 +1,4 @@
-/* Versão 0.10.0 — arte limpa preservada; interface construída em HTML/CSS. */
+/* Versão 0.10.1 — arte limpa preservada; interface construída em HTML/CSS. */
 .public-main {
   width: min(1500px, calc(100% - 36px));
   padding-top: 28px;
@@ -223,6 +223,90 @@
   filter: none !important;
 }
 
+/* Login administrativo: a mesma arte limpa ocupa todo o painel visual. */
+@media (min-width: 901px) {
+  .auth-showcase {
+    background: #08275d;
+  }
+
+  .auth-showcase::before,
+  .auth-showcase::after {
+    display: none;
+  }
+
+  .auth-image {
+    z-index: 1;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 1;
+    mask-image: none;
+  }
+
+  .auth-image::before {
+    content: "";
+    position: absolute;
+    z-index: 2;
+    inset: 0;
+    background: linear-gradient(90deg,
+      rgba(7, 28, 77, .28) 0%,
+      rgba(7, 28, 77, .12) 42%,
+      rgba(7, 28, 77, 0) 67%);
+    pointer-events: none;
+  }
+
+  .auth-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .auth-brand,
+  .auth-copy {
+    position: relative;
+    z-index: 4;
+  }
+
+  .auth-copy {
+    max-width: 54%;
+  }
+}
+
+/* Painel administrativo: a arte limpa forma o fundo completo do banner. */
+.hero-card .hero-visual {
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+}
+
+.hero-card .hero-visual::before {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  background: linear-gradient(90deg,
+    rgba(7, 28, 77, .18) 0%,
+    rgba(7, 28, 77, .08) 43%,
+    rgba(7, 28, 77, 0) 66%);
+  pointer-events: none;
+}
+
+.hero-card .hero-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 45%;
+}
+
+.hero-card .hero-copy {
+  position: relative;
+  z-index: 4;
+  width: 58%;
+}
+
 @media (max-width: 1120px) and (min-width: 721px) {
   .landing-content {
     padding-left: 40px;
@@ -420,6 +504,14 @@
     stroke-width: 1.8;
     stroke-linecap: round;
     stroke-linejoin: round;
+  }
+
+  .hero-card .hero-copy {
+    width: 76%;
+  }
+
+  .hero-card .hero-visual img {
+    object-position: 56% center;
   }
 }
 

@@ -22,7 +22,6 @@ const requiredFiles = [
   'api/health.js',
   'assets/logo-escola.png',
   'assets/cabecalho-escola.png',
-  'assets/estudantes-biblioteca.png',
   'assets/fundo-inicio-desktop.png',
   'assets/fundo-inicio-mobile.png'
 ];
@@ -53,7 +52,6 @@ for (const reference of [
   '/config.js',
   '/supabase-client.js',
   '/assets/logo-escola.png',
-  '/assets/estudantes-biblioteca.png',
   '/assets/fundo-inicio-desktop.png',
   '/assets/fundo-inicio-mobile.png'
 ]) {
