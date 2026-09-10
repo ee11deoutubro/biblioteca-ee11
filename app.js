@@ -58,6 +58,10 @@
   const copyFieldsList = document.getElementById('copyFieldsList');
   const copyFieldsHelp = document.getElementById('copyFieldsHelp');
   const addCopyButton = document.getElementById('addCopyButton');
+  const bookDetailsPanel = document.getElementById('bookDetailsPanel');
+  const bookDetailsContent = document.getElementById('bookDetailsContent');
+  const closeBookDetails = document.getElementById('closeBookDetails');
+  const editBookFromDetails = document.getElementById('editBookFromDetails');
   const refreshRequests = document.getElementById('refreshRequests');
   const requestStatusFilter = document.getElementById('requestStatusFilter');
   const requestCount = document.getElementById('requestCount');
@@ -75,6 +79,7 @@
   let pendingEditBookId = null;
   let requestsCache = [];
   let editingCopies = [];
+  let selectedBookDetailsId = null;
 
   const CLASSIFICATION_COLORS = Object.freeze({
     Amarela: '#eab308',
@@ -620,15 +625,12 @@
       const colorLabel = classificationColorLabel(book);
       const colorTag = `<span class="classification-color-tag${book.classificacao_cor ? '' : ' is-empty'}" style="--classification-color:${color}">${escapeHtml(colorLabel)}</span>`;
 
-      return `<article class="catalog-card" data-book-id="${escapeHtml(book.id)}" style="--classification-color:${color}">
+      return `<article class="catalog-card" data-book-id="${escapeHtml(book.id)}" data-view-book="${escapeHtml(book.id)}" style="--classification-color:${color}" role="button" tabindex="0" aria-label="Ver informações de ${escapeHtml(book.titulo)}">
         <div class="book-cover">${cover}</div>
         <div class="catalog-card-content">
           <div class="catalog-title-row">
             <h2 title="${escapeHtml(book.titulo)}">${escapeHtml(book.titulo)}</h2>
-            <button class="edit-book-button" type="button" data-edit-book="${escapeHtml(book.id)}" aria-label="Editar ${escapeHtml(book.titulo)}">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10.9-10.9a2.1 2.1 0 0 0-3-3L5.2 16zM14.8 6.2l3 3"/></svg>
-              Editar
-            </button>
+            <span class="view-book-hint">Ver ficha <b>›</b></span>
           </div>
           <p class="catalog-author">${escapeHtml(book.autor)}</p>
           <div class="catalog-meta">${metadata}${colorTag}</div>
@@ -636,6 +638,110 @@
         </div>
       </article>`;
     }).join('');
+  }
+
+  function copyStatusLabel(copy) {
+    if (copy.ativo === false) return 'Desativado';
+    const labels = {
+      disponivel: 'Disponível',
+      reservado: 'Reservado',
+      emprestado: 'Emprestado',
+      manutencao: 'Em manutenção'
+    };
+    return labels[copy.status] || String(copy.status || 'Disponível').replaceAll('_', ' ');
+  }
+
+  function detailValue(value, fallback = 'Não informado') {
+    return value === null || value === undefined || String(value).trim() === ''
+      ? fallback
+      : String(value);
+  }
+
+  function renderBookDetails(book, copies = []) {
+    if (!bookDetailsContent) return;
+    const cover = book.capa_url
+      ? `<img src="${escapeHtml(book.capa_url)}" alt="Capa de ${escapeHtml(book.titulo)}" />`
+      : '<span class="book-details-cover-placeholder"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2zm2 0v16m3-12h6m-6 4h6"/></svg><small>Sem capa</small></span>';
+    const color = classificationColor(book);
+    const colorLabel = classificationColorLabel(book);
+    const items = [
+      ['Autor ou autora', detailValue(book.autor)],
+      ['Editora', detailValue(book.editora)],
+      ['ISBN', detailValue(book.isbn)],
+      ['Ano de publicação', detailValue(book.ano_publicacao)],
+      ['Gênero ou categoria', detailValue(book.categoria)],
+      ['Código do gênero', detailValue(book.genero_codigo)],
+      ['Número da classificação', detailValue(book.classificacao_numero)],
+      ['Ordem da planilha', book.ordem_planilha ? String(book.ordem_planilha).padStart(3, '0') : 'Não informada']
+    ];
+    const copiesMarkup = copies.length
+      ? copies.map((copy) => {
+        const tombamento = detailValue(copy.tombamento, 'Tombamento pendente');
+        const pending = !copy.tombamento;
+        const status = copyStatusLabel(copy);
+        const statusClass = copy.ativo === false ? 'inactive' : normalizeSearch(copy.status || 'disponivel').replaceAll(' ', '-');
+        return `<article class="book-copy-detail ${copy.ativo === false ? 'is-inactive' : ''}">
+          <div class="book-copy-number"><strong>Exemplar ${escapeHtml(copy.numero_exemplar)}</strong><span>${escapeHtml(copy.codigo || 'Código não informado')}</span></div>
+          <dl><div><dt>Tombamento</dt><dd class="${pending ? 'is-pending' : ''}">${escapeHtml(tombamento)}</dd></div><div><dt>Localização</dt><dd>${escapeHtml(detailValue(copy.localizacao))}</dd></div><div><dt>Conservação</dt><dd>${escapeHtml(detailValue(copy.conservacao))}</dd></div><div><dt>Origem</dt><dd>${escapeHtml(detailValue(copy.origem))}</dd></div></dl>
+          <span class="copy-status ${escapeHtml(statusClass)}">${escapeHtml(status)}</span>
+        </article>`;
+      }).join('')
+      : '<div class="book-details-empty">Este título ainda não possui exemplar físico cadastrado.</div>';
+
+    bookDetailsContent.innerHTML = `<div class="book-details-main">
+      <div class="book-details-cover">${cover}</div>
+      <div class="book-details-summary"><span class="book-details-color" style="--classification-color:${color}"><i></i>${escapeHtml(colorLabel)}</span><h3>${escapeHtml(book.titulo)}</h3>${book.subtitulo ? `<p class="book-details-subtitle">${escapeHtml(book.subtitulo)}</p>` : ''}<div class="book-details-grid">${items.map(([label, value]) => `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join('')}</div></div>
+    </div><div class="book-details-copies-heading"><div><span>EXEMPLARES</span><h3>Unidades físicas</h3></div><strong>${copies.length} exemplar${copies.length === 1 ? '' : 'es'}</strong></div><div class="book-details-copies">${copiesMarkup}</div>`;
+  }
+
+  async function openBookDetails(bookId) {
+    const book = catalogCache.find((item) => item.id === bookId);
+    if (!book || !bookDetailsPanel || !bookDetailsContent) {
+      showToast('Não foi possível localizar este título.');
+      return;
+    }
+
+    selectedBookDetailsId = book.id;
+    if (bookFormPanel) bookFormPanel.hidden = true;
+    bookDetailsPanel.hidden = false;
+    bookDetailsContent.innerHTML = '<div class="book-details-loading">Carregando informações e exemplares...</div>';
+    if (editBookFromDetails) editBookFromDetails.dataset.bookId = book.id;
+    writeStorage(NAVIGATION_KEY, { activeView: 'Acervo', activeActivity: `detalhes-livro:${book.id}` });
+    bookDetailsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    const client = window.bibliotecaSupabase;
+    if (!client) {
+      renderBookDetails(book, []);
+      return;
+    }
+
+    let { data: copies, error } = await client
+      .from('exemplares')
+      .select('id,codigo,numero_exemplar,tombamento,conservacao,localizacao,origem,status,ativo')
+      .eq('livro_id', book.id)
+      .order('numero_exemplar', { ascending: true });
+    if (error && String(error.message || '').toLowerCase().includes('tombamento')) {
+      const fallback = await client
+        .from('exemplares')
+        .select('id,codigo,numero_exemplar,conservacao,localizacao,origem,status,ativo')
+        .eq('livro_id', book.id)
+        .order('numero_exemplar', { ascending: true });
+      copies = fallback.data;
+      error = fallback.error;
+    }
+    if (error) {
+      bookDetailsContent.innerHTML = '<div class="book-details-empty">Não foi possível carregar os exemplares deste título.</div>';
+      return;
+    }
+    renderBookDetails(book, copies || []);
+  }
+
+  function hideBookDetails() {
+    if (bookDetailsPanel) bookDetailsPanel.hidden = true;
+    selectedBookDetailsId = null;
+    const state = readStorage(NAVIGATION_KEY, {});
+    writeStorage(NAVIGATION_KEY, { ...state, activeActivity: null });
+    scrollToContent();
   }
 
   async function refreshCompleteCatalog(showLoading = false) {
@@ -954,6 +1060,8 @@
 
   function openCatalogForm() {
     if (!bookFormPanel) return;
+    if (bookDetailsPanel) bookDetailsPanel.hidden = true;
+    selectedBookDetailsId = null;
     clearActivity('cadastro-livro');
     bookForm?.reset();
     setBookFormMode('create');
@@ -973,6 +1081,9 @@
       showToast('Não foi possível localizar este título.');
       return;
     }
+
+    if (bookDetailsPanel) bookDetailsPanel.hidden = true;
+    selectedBookDetailsId = null;
 
     if (!options.preserveDraft) {
       clearActivity('cadastro-livro');
@@ -1549,9 +1660,21 @@
     renderCatalog();
   });
   catalogGrid?.addEventListener('click', (event) => {
-    const button = event.target.closest('[data-edit-book]');
-    if (!button) return;
-    openEditBookForm(button.dataset.editBook);
+    const card = event.target.closest('[data-view-book]');
+    if (!card) return;
+    openBookDetails(card.dataset.viewBook);
+  });
+  catalogGrid?.addEventListener('keydown', (event) => {
+    if (!['Enter', ' '].includes(event.key)) return;
+    const card = event.target.closest('[data-view-book]');
+    if (!card) return;
+    event.preventDefault();
+    openBookDetails(card.dataset.viewBook);
+  });
+  closeBookDetails?.addEventListener('click', hideBookDetails);
+  editBookFromDetails?.addEventListener('click', () => {
+    const bookId = editBookFromDetails.dataset.bookId || selectedBookDetailsId;
+    if (bookId) openEditBookForm(bookId);
   });
 
   document.querySelectorAll('[data-module]').forEach((button) => {

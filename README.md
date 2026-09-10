@@ -1,4 +1,4 @@
-# Biblioteca EE 11 de Outubro — versão 0.11.5
+# Biblioteca EE 11 de Outubro — versão 0.11.6
 
 Esta versão usa as artes limpas e inalteradas somente como fundo da tela inicial. Cabeçalho, brasão, textos, cartões e navegação são elementos reais do APP em HTML e CSS.
 
