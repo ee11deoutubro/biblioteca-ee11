@@ -1,4 +1,4 @@
-# Biblioteca EE 11 de Outubro — versão 0.11.6
+# Biblioteca EE 11 de Outubro — versão 0.12.0
 
 Esta versão usa as artes limpas e inalteradas somente como fundo da tela inicial. Cabeçalho, brasão, textos, cartões e navegação são elementos reais do APP em HTML e CSS.
 
@@ -92,6 +92,18 @@ Os títulos podem ser pesquisados, filtrados por disponibilidade e separados
 pelas abas de gênero/categoria geradas automaticamente. A ação **Editar** permite
 alterar os dados do título, enviar ou substituir sua capa e atualizar o
 tombamento, a localização, a conservação e a origem de cada exemplar.
+
+## Empréstimo administrativo
+
+- O bibliotecário localiza o aluno pelo Código SGDE.
+- O painel mostra os empréstimos ativos e as reservas que aguardam retirada.
+- O exemplar pode ser buscado por título, autor, código interno ou tombamento.
+- A data prevista de devolução começa preenchida em 15 dias e pode ser alterada.
+- Ao confirmar, o exemplar passa imediatamente para **emprestado** e deixa de aparecer entre os disponíveis.
+- Uma reserva do mesmo aluno pode ter a retirada confirmada no próprio painel.
+
+Para ativar esse fluxo, publique os arquivos e execute uma única vez no SQL Editor
+do Supabase o arquivo `ativar-emprestimos-diretos.sql`.
 
 Antes de publicar esta versão, execute uma única vez no SQL Editor do Supabase o
 arquivo `atualizar-catalogo-classificacao-tombamento.sql`. Ele acrescenta os

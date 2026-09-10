@@ -69,6 +69,24 @@
   const requestsEmpty = document.getElementById('requestsEmpty');
   const openAdminLogin = document.getElementById('openAdminLogin');
   const backToCatalog = document.getElementById('backToCatalog');
+  const loanOperationPanel = document.getElementById('loanOperationPanel');
+  const closeLoanOperation = document.getElementById('closeLoanOperation');
+  const loanStudentCode = document.getElementById('loanStudentCode');
+  const findLoanStudentButton = document.getElementById('findLoanStudent');
+  const loanStudentFeedback = document.getElementById('loanStudentFeedback');
+  const loanStudentCard = document.getElementById('loanStudentCard');
+  const loanStudentRecords = document.getElementById('loanStudentRecords');
+  const loanCopyStep = document.getElementById('loanCopyStep');
+  const loanCopySearch = document.getElementById('loanCopySearch');
+  const searchLoanCopiesButton = document.getElementById('searchLoanCopies');
+  const loanCopyFeedback = document.getElementById('loanCopyFeedback');
+  const loanCopyResults = document.getElementById('loanCopyResults');
+  const loanConfirmStep = document.getElementById('loanConfirmStep');
+  const loanSelectedCopy = document.getElementById('loanSelectedCopy');
+  const loanForm = document.getElementById('loanForm');
+  const loanDueDate = document.getElementById('loanDueDate');
+  const saveLoanButton = document.getElementById('saveLoanButton');
+  const loanFormFeedback = document.getElementById('loanFormFeedback');
   let toastTimer;
   let releaseTopLock = () => {};
   let activeProfile = null;
@@ -80,6 +98,8 @@
   let requestsCache = [];
   let editingCopies = [];
   let selectedBookDetailsId = null;
+  let selectedLoanStudent = null;
+  let selectedLoanCopy = null;
 
   const CLASSIFICATION_COLORS = Object.freeze({
     Amarela: '#eab308',
@@ -880,7 +900,7 @@
 
   async function confirmPickup(requestId, button) {
     const client = window.bibliotecaSupabase;
-    if (!client || !requestId) return;
+    if (!client || !requestId) return false;
     button.disabled = true;
     button.textContent = 'Confirmando...';
     try {
@@ -888,12 +908,230 @@
       if (error) throw error;
       showToast('Retirada confirmada. O livro agora consta como emprestado.');
       await connectDashboard();
+      return true;
     } catch (error) {
       console.error('Falha ao confirmar retirada:', error);
       showToast(error?.message || 'Não foi possível confirmar a retirada.');
       button.disabled = false;
       button.textContent = 'Confirmar retirada';
+      return false;
     }
+  }
+
+  function formatDateOnly(value) {
+    if (!value) return '—';
+    const date = new Date(`${String(value).slice(0, 10)}T12:00:00`);
+    return new Intl.DateTimeFormat('pt-BR').format(date);
+  }
+
+  function loanDefaultDueDate() {
+    const date = new Date();
+    date.setDate(date.getDate() + 15);
+    return date.toISOString().slice(0, 10);
+  }
+
+  function setLoanFeedback(element, message = '', success = false) {
+    if (!element) return;
+    element.textContent = message;
+    element.classList.toggle('success', success);
+  }
+
+  function enableLoanCopyStep(enabled) {
+    loanCopyStep?.setAttribute('aria-disabled', String(!enabled));
+    if (loanCopySearch) loanCopySearch.disabled = !enabled;
+    if (searchLoanCopiesButton) searchLoanCopiesButton.disabled = !enabled;
+  }
+
+  function enableLoanConfirmStep(enabled) {
+    loanConfirmStep?.setAttribute('aria-disabled', String(!enabled));
+    if (loanDueDate) loanDueDate.disabled = !enabled;
+    if (saveLoanButton) saveLoanButton.disabled = !enabled;
+  }
+
+  function resetLoanOperation({ clearCode = false } = {}) {
+    selectedLoanStudent = null;
+    selectedLoanCopy = null;
+    if (clearCode && loanStudentCode) loanStudentCode.value = '';
+    if (loanStudentCard) {
+      loanStudentCard.hidden = true;
+      loanStudentCard.replaceChildren();
+    }
+    if (loanStudentRecords) {
+      loanStudentRecords.hidden = true;
+      loanStudentRecords.replaceChildren();
+    }
+    if (loanCopySearch) loanCopySearch.value = '';
+    if (loanCopyResults) loanCopyResults.replaceChildren();
+    if (loanSelectedCopy) {
+      loanSelectedCopy.hidden = true;
+      loanSelectedCopy.replaceChildren();
+    }
+    if (loanDueDate) {
+      loanDueDate.min = new Date().toISOString().slice(0, 10);
+      loanDueDate.value = loanDefaultDueDate();
+    }
+    enableLoanCopyStep(false);
+    enableLoanConfirmStep(false);
+    setLoanFeedback(loanStudentFeedback);
+    setLoanFeedback(loanCopyFeedback);
+    setLoanFeedback(loanFormFeedback);
+  }
+
+  function renderLoanStudentRecords(loans, reservations) {
+    if (!loanStudentRecords) return;
+    const activeLoans = loans.filter((loan) => loan.emprestimo_id);
+    const pendingReservations = reservations.filter((request) => request.status === 'aguardando_retirada');
+    const loansMarkup = activeLoans.length
+      ? activeLoans.map((loan) => `<article><span class="loan-record-badge ${loan.situacao === 'em_atraso' ? 'overdue' : ''}">${loan.situacao === 'em_atraso' ? 'Em atraso' : 'Emprestado'}</span><strong>${escapeHtml(loan.titulo)}</strong><small>Exemplar ${escapeHtml(loan.exemplar_codigo || 'sem código')} • devolver em ${escapeHtml(formatDateOnly(loan.devolucao_prevista))}</small></article>`).join('')
+      : '<p>Nenhum empréstimo ativo.</p>';
+    const reservationsMarkup = pendingReservations.length
+      ? pendingReservations.map((request) => `<article><span class="loan-record-badge reserved">Reserva</span><strong>${escapeHtml(request.titulo)}</strong><small>Retirar até ${escapeHtml(formatDateTime(request.reservado_ate))}</small><button class="confirm-pickup-button" type="button" data-loan-confirm-pickup="${escapeHtml(request.id)}">Confirmar retirada</button></article>`).join('')
+      : '<p>Nenhuma reserva aguardando retirada.</p>';
+
+    loanStudentRecords.hidden = false;
+    loanStudentRecords.innerHTML = `<div><h4>Empréstimos ativos</h4>${loansMarkup}</div><div><h4>Reservas do aluno</h4>${reservationsMarkup}</div>`;
+  }
+
+  async function findLoanStudent() {
+    const client = window.bibliotecaSupabase;
+    const code = String(loanStudentCode?.value || '').trim();
+    if (!client || !code) {
+      setLoanFeedback(loanStudentFeedback, 'Digite o Código SGDE do aluno.');
+      loanStudentCode?.focus();
+      return;
+    }
+
+    findLoanStudentButton.disabled = true;
+    findLoanStudentButton.textContent = 'Buscando...';
+    setLoanFeedback(loanStudentFeedback, 'Consultando o cadastro do aluno...', true);
+    resetLoanOperation();
+    if (loanStudentCode) loanStudentCode.value = code;
+
+    try {
+      const { data: studentRows, error: studentError } = await client.rpc('localizar_aluno_por_codigo', { p_codigo: code });
+      if (studentError) throw studentError;
+      const student = studentRows?.[0];
+      if (!student) throw new Error('Aluno não localizado. Confira o Código SGDE.');
+
+      const [loansResponse, requestsResponse] = await Promise.all([
+        client.rpc('consultar_emprestimos_por_codigo', { p_codigo: code }),
+        client.rpc('listar_solicitacoes_administracao')
+      ]);
+      if (loansResponse.error) throw loansResponse.error;
+      if (requestsResponse.error) throw requestsResponse.error;
+
+      selectedLoanStudent = student;
+      loanStudentCard.hidden = false;
+      loanStudentCard.innerHTML = `<span class="loan-student-avatar">${escapeHtml(String(student.nome || 'A').charAt(0).toUpperCase())}</span><div><small>ALUNO LOCALIZADO</small><strong>${escapeHtml(student.nome)}</strong><span>Código SGDE: ${escapeHtml(student.codigo)}${student.turma ? ` • ${escapeHtml(student.turma)}` : ''}</span></div><i>✓</i>`;
+      const reservations = (requestsResponse.data || []).filter((request) => normalizeSearch(request.aluno_codigo) === normalizeSearch(student.codigo));
+      renderLoanStudentRecords(loansResponse.data || [], reservations);
+      enableLoanCopyStep(true);
+      setLoanFeedback(loanStudentFeedback, 'Aluno confirmado. Agora selecione o exemplar.', true);
+      loanCopySearch?.focus({ preventScroll: true });
+      loanCopyStep?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (error) {
+      console.error('Falha ao localizar aluno para empréstimo:', error);
+      setLoanFeedback(loanStudentFeedback, error?.message || 'Não foi possível localizar o aluno.');
+    } finally {
+      findLoanStudentButton.disabled = false;
+      findLoanStudentButton.textContent = 'Buscar aluno';
+    }
+  }
+
+  async function searchAvailableLoanCopies() {
+    const client = window.bibliotecaSupabase;
+    const query = String(loanCopySearch?.value || '').trim();
+    if (!client || !selectedLoanStudent) return;
+    if (!query) {
+      setLoanFeedback(loanCopyFeedback, 'Digite o título, autor, código ou tombamento.');
+      loanCopySearch?.focus();
+      return;
+    }
+
+    searchLoanCopiesButton.disabled = true;
+    searchLoanCopiesButton.textContent = 'Buscando...';
+    setLoanFeedback(loanCopyFeedback, 'Consultando exemplares disponíveis...', true);
+    selectedLoanCopy = null;
+    enableLoanConfirmStep(false);
+    if (loanSelectedCopy) loanSelectedCopy.hidden = true;
+
+    try {
+      const { data, error } = await client.rpc('buscar_exemplares_disponiveis', { p_busca: query });
+      if (error) throw error;
+      const copies = data || [];
+      setLoanFeedback(loanCopyFeedback, copies.length ? `${copies.length} exemplar${copies.length === 1 ? '' : 'es'} encontrado${copies.length === 1 ? '' : 's'}.` : 'Nenhum exemplar disponível encontrado.', copies.length > 0);
+      loanCopyResults.innerHTML = copies.map((copy) => `<button type="button" class="loan-copy-option" data-loan-copy='${escapeHtml(JSON.stringify(copy))}'><span class="loan-copy-cover">${copy.capa_url ? `<img src="${escapeHtml(copy.capa_url)}" alt="" />` : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2zm2 0v16"/></svg>'}</span><span><strong>${escapeHtml(copy.titulo)}</strong><small>${escapeHtml(copy.autor || 'Autor não informado')}</small><em>${escapeHtml(copy.tombamento ? `Tombamento ${copy.tombamento}` : copy.exemplar_codigo)}${copy.localizacao ? ` • ${escapeHtml(copy.localizacao)}` : ''}</em></span><b>Selecionar</b></button>`).join('');
+    } catch (error) {
+      console.error('Falha ao buscar exemplares:', error);
+      loanCopyResults.replaceChildren();
+      setLoanFeedback(loanCopyFeedback, error?.message || 'Não foi possível buscar os exemplares.');
+    } finally {
+      searchLoanCopiesButton.disabled = false;
+      searchLoanCopiesButton.textContent = 'Buscar exemplar';
+    }
+  }
+
+  function selectLoanCopy(copy) {
+    selectedLoanCopy = copy;
+    loanCopyResults?.querySelectorAll('.loan-copy-option').forEach((button) => {
+      button.classList.toggle('selected', JSON.parse(button.dataset.loanCopy).exemplar_id === copy.exemplar_id);
+    });
+    loanSelectedCopy.hidden = false;
+    loanSelectedCopy.innerHTML = `<span>EXEMPLAR SELECIONADO</span><strong>${escapeHtml(copy.titulo)}</strong><small>${escapeHtml(copy.tombamento ? `Tombamento ${copy.tombamento}` : `Código ${copy.exemplar_codigo}`)}${copy.localizacao ? ` • ${escapeHtml(copy.localizacao)}` : ''}</small>`;
+    enableLoanConfirmStep(true);
+    setLoanFeedback(loanFormFeedback);
+    loanConfirmStep?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    loanDueDate?.focus({ preventScroll: true });
+  }
+
+  async function saveDirectLoan(event) {
+    event.preventDefault();
+    const client = window.bibliotecaSupabase;
+    if (!client || !selectedLoanStudent || !selectedLoanCopy || !loanDueDate?.value) {
+      setLoanFeedback(loanFormFeedback, 'Confirme o aluno, o exemplar e a data de devolução.');
+      return;
+    }
+
+    saveLoanButton.disabled = true;
+    saveLoanButton.querySelector('span').textContent = 'Registrando...';
+    setLoanFeedback(loanFormFeedback, 'Registrando o empréstimo...', true);
+    try {
+      const { data, error } = await client.rpc('registrar_emprestimo_por_codigo', {
+        p_codigo: selectedLoanStudent.codigo,
+        p_exemplar_id: selectedLoanCopy.exemplar_id,
+        p_devolucao_prevista: loanDueDate.value
+      });
+      if (error) throw error;
+      const result = data?.[0];
+      const confirmedDueDate = result?.devolucao_prevista || loanDueDate.value;
+      showToast('Empréstimo registrado com sucesso.');
+      selectedLoanCopy = null;
+      loanCopySearch.value = '';
+      loanCopyResults.replaceChildren();
+      loanSelectedCopy.hidden = true;
+      enableLoanConfirmStep(false);
+      await connectDashboard();
+      await findLoanStudent();
+      setLoanFeedback(loanFormFeedback, `Empréstimo registrado. Devolução prevista para ${formatDateOnly(confirmedDueDate)}.`, true);
+    } catch (error) {
+      console.error('Falha ao registrar empréstimo:', error);
+      setLoanFeedback(loanFormFeedback, error?.message || 'Não foi possível registrar o empréstimo.');
+    } finally {
+      saveLoanButton.disabled = !selectedLoanCopy;
+      saveLoanButton.querySelector('span').textContent = 'Registrar empréstimo';
+    }
+  }
+
+  function prepareLoanOperation() {
+    if (!loanDueDate?.value) loanDueDate.value = loanDefaultDueDate();
+    if (loanDueDate) loanDueDate.min = new Date().toISOString().slice(0, 10);
+  }
+
+  function closeLoanPanel() {
+    if (loanOperationPanel) loanOperationPanel.hidden = true;
+    resetLoanOperation({ clearCode: true });
+    clearActivity('emprestimo');
+    scrollToContent();
   }
 
   function availableView(name) {
@@ -1502,6 +1740,9 @@
     bookFormPanel.hidden = false;
   } else if (String(savedNavigation.activeActivity || '').startsWith('editar-livro:')) {
     pendingEditBookId = String(savedNavigation.activeActivity).slice('editar-livro:'.length);
+  } else if (savedNavigation.activeActivity === 'emprestimo' && loanOperationPanel) {
+    loanOperationPanel.hidden = false;
+    prepareLoanOperation();
   }
   forceInitialTop();
 
@@ -1651,6 +1892,36 @@
     if (!button) return;
     confirmPickup(button.dataset.confirmPickup, button);
   });
+  findLoanStudentButton?.addEventListener('click', findLoanStudent);
+  loanStudentCode?.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    findLoanStudent();
+  });
+  searchLoanCopiesButton?.addEventListener('click', searchAvailableLoanCopies);
+  loanCopySearch?.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    searchAvailableLoanCopies();
+  });
+  loanCopyResults?.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-loan-copy]');
+    if (!button) return;
+    try {
+      selectLoanCopy(JSON.parse(button.dataset.loanCopy));
+    } catch (error) {
+      console.error('Falha ao selecionar exemplar:', error);
+      setLoanFeedback(loanCopyFeedback, 'Não foi possível selecionar este exemplar. Atualize a busca.');
+    }
+  });
+  loanStudentRecords?.addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-loan-confirm-pickup]');
+    if (!button) return;
+    const confirmed = await confirmPickup(button.dataset.loanConfirmPickup, button);
+    if (confirmed) await findLoanStudent();
+  });
+  loanForm?.addEventListener('submit', saveDirectLoan);
+  closeLoanOperation?.addEventListener('click', closeLoanPanel);
   catalogCategories?.addEventListener('click', (event) => {
     const button = event.target.closest('[data-category]');
     if (!button) return;
@@ -1696,12 +1967,14 @@
 
       if (activityPanel) {
         activityPanel.hidden = false;
+        if (activity === 'emprestimo') prepareLoanOperation();
         writeStorage(NAVIGATION_KEY, {
           ...readStorage(NAVIGATION_KEY, {}),
           activeActivity: activity
         });
         activityPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        activityPanel.querySelector('input, select, textarea, button')?.focus({ preventScroll: true });
+        if (activity === 'emprestimo') loanStudentCode?.focus({ preventScroll: true });
+        else activityPanel.querySelector('input, select, textarea, button')?.focus({ preventScroll: true });
       } else {
         showToast(`${label} será ativado na etapa de operações.`);
         scrollToContent();

@@ -18,6 +18,7 @@ const requiredFiles = [
   'supabase-client.js',
   'atualizar-permissoes-gestao.sql',
   'ativar-reservas-online.sql',
+  'ativar-emprestimos-diretos.sql',
   'atualizar-catalogo-classificacao-tombamento.sql',
   'importar-metadados-planilha-original.sql',
   'vercel.json',
@@ -78,6 +79,11 @@ for (const catalogField of ['ordem_planilha', 'genero_codigo', 'classificacao_nu
     throw new Error(`Campo do novo cadastro ausente: ${catalogField}`);
   }
 }
+for (const loanField of ['loanOperationPanel', 'loanStudentCode', 'loanCopySearch', 'loanDueDate', 'saveLoanButton']) {
+  if (!html.includes(`id="${loanField}"`)) {
+    throw new Error(`Campo do empréstimo administrativo ausente: ${loanField}`);
+  }
+}
 if (!html.includes('id="publicPortal"') || !html.includes('id="reservationModal"')) {
   throw new Error('O catálogo público ou o fluxo de reserva está incompleto.');
 }
@@ -100,6 +106,11 @@ if (/localStorage\.(getItem|setItem)\(key/.test(appScript)) {
 for (const feature of ['renderCategoryTabs', 'openEditBookForm', 'saveEditedBook', 'renderCopyFields', 'tombamento']) {
   if (!appScript.includes(feature)) {
     throw new Error(`Recurso do acervo ausente: ${feature}`);
+  }
+}
+for (const feature of ['findLoanStudent', 'searchAvailableLoanCopies', 'saveDirectLoan', 'registrar_emprestimo_por_codigo']) {
+  if (!appScript.includes(feature)) {
+    throw new Error(`Recurso de empréstimo administrativo ausente: ${feature}`);
   }
 }
 if (!appScript.includes("book?.classificacao_cor || 'Cor não informada'")) {
@@ -164,6 +175,16 @@ const reservationsSql = await readFile(
 for (const feature of ["'{\"dias\": 3}'", 'reservar_livro_por_codigo', 'liberar_solicitacoes_expiradas', 'consultar_emprestimos_por_codigo']) {
   if (!reservationsSql.includes(feature)) {
     throw new Error(`Regra de reserva ausente no Supabase: ${feature}`);
+  }
+}
+
+const directLoansSql = await readFile(
+  new URL('../ativar-emprestimos-diretos.sql', import.meta.url),
+  'utf8'
+);
+for (const feature of ['buscar_exemplares_disponiveis', 'registrar_emprestimo_por_codigo', 'tombamento', "set status = 'emprestado'"]) {
+  if (!directLoansSql.includes(feature)) {
+    throw new Error(`Regra do empréstimo administrativo ausente: ${feature}`);
   }
 }
 

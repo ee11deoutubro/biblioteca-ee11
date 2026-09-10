@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#071c4d" />
   <meta name="description" content="Sistema de gestão da Biblioteca da EE 11 de Outubro" />
-  <meta name="app-version" content="0.11.6" />
+  <meta name="app-version" content="0.12.0" />
   <meta property="og:locale" content="pt_BR" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Biblioteca 11 • EE 11 de Outubro" />
@@ -58,7 +58,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/styles.css?v=0.11.6" />
+  <link rel="stylesheet" href="/styles.css?v=0.12.0" />
   <link rel="stylesheet" href="/auth.css?v=0.8.0" />
   <link rel="stylesheet" href="/portal.css?v=0.8.0" />
   <link rel="stylesheet" href="/portal-interactions.css?v=0.8.3" />
@@ -331,6 +331,31 @@
           </button>
         </section>
 
+        <section class="loan-operation-panel" id="loanOperationPanel" data-activity-panel="emprestimo" hidden>
+          <div class="loan-operation-heading"><div><span class="section-kicker">CIRCULAÇÃO</span><h2>Novo empréstimo</h2><p>Localize o aluno pelo Código SGDE e escolha o exemplar físico.</p></div><button class="icon-close" id="closeLoanOperation" type="button" aria-label="Fechar novo empréstimo">×</button></div>
+          <div class="loan-operation-body">
+            <section class="loan-step">
+              <div class="loan-step-title"><span>1</span><div><h3>Identificar o aluno</h3><p>O Código SGDE é o identificador oficial.</p></div></div>
+              <div class="loan-inline-fields"><label class="app-field"><span>Código SGDE *</span><input id="loanStudentCode" type="text" inputmode="numeric" autocomplete="off" placeholder="Digite o código do aluno" data-persist="emprestimo-codigo" data-activity="emprestimo" /></label><button class="secondary-button" id="findLoanStudent" type="button">Buscar aluno</button></div>
+              <p class="loan-feedback" id="loanStudentFeedback" role="status" aria-live="polite"></p>
+              <div class="loan-student-card" id="loanStudentCard" hidden></div>
+              <div class="loan-student-records" id="loanStudentRecords" hidden></div>
+            </section>
+            <section class="loan-step loan-copy-step" id="loanCopyStep" aria-disabled="true">
+              <div class="loan-step-title"><span>2</span><div><h3>Selecionar o exemplar</h3><p>Busque pelo título, autor, código interno ou tombamento.</p></div></div>
+              <div class="loan-inline-fields"><label class="app-field"><span>Livro ou tombamento *</span><input id="loanCopySearch" type="search" autocomplete="off" placeholder="Ex.: A Botija ou 001245" disabled /></label><button class="secondary-button" id="searchLoanCopies" type="button" disabled>Buscar exemplar</button></div>
+              <p class="loan-feedback" id="loanCopyFeedback" role="status" aria-live="polite"></p>
+              <div class="loan-copy-results" id="loanCopyResults"></div>
+            </section>
+            <section class="loan-step loan-confirm-step" id="loanConfirmStep" aria-disabled="true">
+              <div class="loan-step-title"><span>3</span><div><h3>Confirmar o empréstimo</h3><p>Confira o aluno, o exemplar e a data prevista para devolução.</p></div></div>
+              <div class="loan-selected-copy" id="loanSelectedCopy" hidden></div>
+              <form id="loanForm"><label class="app-field"><span>Data prevista para devolução *</span><input id="loanDueDate" name="devolucao_prevista" type="date" required disabled /></label><button class="primary-button" id="saveLoanButton" type="submit" disabled><span>Registrar empréstimo</span></button></form>
+              <p class="loan-feedback" id="loanFormFeedback" role="alert" aria-live="polite"></p>
+            </section>
+          </div>
+        </section>
+
         <section class="hero-card">
           <div class="hero-copy">
             <span class="hero-pill"><i></i> Biblioteca conectada</span>
@@ -496,8 +521,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="/config.js"></script>
   <script src="/supabase-client.js"></script>
-  <script src="/catalogo-metadata-original.js?v=0.11.6"></script>
+  <script src="/catalogo-metadata-original.js?v=0.12.0"></script>
   <script src="/portal.js?v=0.10.1"></script>
-  <script src="/app.js?v=0.11.6"></script>
+  <script src="/app.js?v=0.12.0"></script>
 </body>
 </html>
