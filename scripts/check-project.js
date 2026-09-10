@@ -19,6 +19,7 @@ const requiredFiles = [
   'atualizar-permissoes-gestao.sql',
   'ativar-reservas-online.sql',
   'atualizar-catalogo-classificacao-tombamento.sql',
+  'importar-metadados-planilha-original.sql',
   'vercel.json',
   'api/health.js',
   'assets/logo-escola.png',
@@ -131,6 +132,19 @@ for (const feature of ['ordem_planilha', 'genero_codigo', 'classificacao_numero'
   if (!catalogSql.includes(feature)) {
     throw new Error(`Atualização do catálogo incompleta: ${feature}`);
   }
+}
+
+const catalogImportSql = await readFile(
+  new URL('../importar-metadados-planilha-original.sql', import.meta.url),
+  'utf8'
+);
+for (const feature of ['catalogo_planilha_original', '398 títulos', 'update public.livros', 'update public.exemplares']) {
+  if (!catalogImportSql.includes(feature)) {
+    throw new Error(`Importação definitiva da planilha incompleta: ${feature}`);
+  }
+}
+if (/delete\s+from\s+public\.(livros|exemplares)/i.test(catalogImportSql)) {
+  throw new Error('A importação da planilha não pode excluir títulos ou exemplares.');
 }
 
 const portalScript = await readFile(new URL('../portal.js', import.meta.url), 'utf8');

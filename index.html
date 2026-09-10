@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#071c4d" />
   <meta name="description" content="Sistema de gestão da Biblioteca da EE 11 de Outubro" />
-  <meta name="app-version" content="0.11.4" />
+  <meta name="app-version" content="0.11.5" />
   <meta property="og:locale" content="pt_BR" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Biblioteca 11 • EE 11 de Outubro" />
@@ -58,7 +58,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/styles.css?v=0.11.1" />
+  <link rel="stylesheet" href="/styles.css?v=0.11.5" />
   <link rel="stylesheet" href="/auth.css?v=0.8.0" />
   <link rel="stylesheet" href="/portal.css?v=0.8.0" />
   <link rel="stylesheet" href="/portal-interactions.css?v=0.8.3" />
@@ -441,13 +441,13 @@
             </section>
 
             <section class="book-form-section copies-form-section">
-              <div class="book-form-section-title"><span>3</span><div><h3>Exemplares físicos</h3><p>Cada unidade recebe seu próprio tombamento e estado de conservação.</p></div></div>
+              <div class="book-form-section-title copies-section-heading"><span>3</span><div><h3>Exemplares físicos</h3><p>Cada unidade recebe seu próprio tombamento e estado de conservação.</p></div><button class="secondary-button add-copy-button" id="addCopyButton" type="button" hidden>+ Adicionar exemplar</button></div>
               <div class="form-grid create-copy-controls" data-create-only>
                 <label class="app-field"><span>Quantidade de exemplares *</span><input name="quantidade" type="number" min="1" max="100" value="1" inputmode="numeric" required data-persist="livro-quantidade" data-activity="cadastro-livro" /></label>
                 <label class="app-field"><span>Origem padrão</span><select name="origem" data-persist="livro-origem" data-activity="cadastro-livro"><option value="">Não informada</option><option value="Compra">Compra</option><option value="Doação">Doação</option><option value="PNLD">PNLD</option><option value="Outro">Outro</option></select></label>
               </div>
               <div class="copy-fields-list" id="copyFieldsList" aria-live="polite"></div>
-              <p class="copy-fields-help" id="copyFieldsHelp">O tombamento pode ficar em branco agora e ser preenchido posteriormente na edição do título.</p>
+              <p class="copy-fields-help" id="copyFieldsHelp">O tombamento é obrigatório e deve ser diferente em cada exemplar.</p>
             </section>
             <p class="form-feedback" id="bookFormFeedback" role="alert" aria-live="polite"></p>
             <div class="form-actions"><button class="secondary-button" id="cancelBookForm" type="button">Cancelar</button><button class="primary-button" id="saveBookButton" type="submit"><span>Salvar no acervo</span></button></div>
@@ -487,8 +487,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="/config.js"></script>
   <script src="/supabase-client.js"></script>
-  <script src="/catalogo-metadata-original.js?v=0.11.4"></script>
+  <script src="/catalogo-metadata-original.js?v=0.11.5"></script>
   <script src="/portal.js?v=0.10.1"></script>
-  <script src="/app.js?v=0.11.4"></script>
+  <script src="/app.js?v=0.11.5"></script>
 </body>
 </html>

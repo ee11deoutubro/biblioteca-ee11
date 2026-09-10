@@ -57,6 +57,7 @@
   const editCoverPreview = document.getElementById('editCoverPreview');
   const copyFieldsList = document.getElementById('copyFieldsList');
   const copyFieldsHelp = document.getElementById('copyFieldsHelp');
+  const addCopyButton = document.getElementById('addCopyButton');
   const refreshRequests = document.getElementById('refreshRequests');
   const requestStatusFilter = document.getElementById('requestStatusFilter');
   const requestCount = document.getElementById('requestCount');
@@ -167,11 +168,14 @@
   function copyRowsPayload() {
     return [...(copyFieldsList?.querySelectorAll('[data-copy-row]') || [])].map((row, index) => ({
       id: row.dataset.copyId || null,
+      codigo: row.dataset.copyCode || null,
       numero_exemplar: Number(row.dataset.copyNumber) || index + 1,
       tombamento: copyFieldValue(row, '[data-copy-field="tombamento"]') || null,
       localizacao: copyFieldValue(row, '[data-copy-field="localizacao"]') || null,
       conservacao: copyFieldValue(row, '[data-copy-field="conservacao"]') || 'bom',
-      origem: copyFieldValue(row, '[data-copy-field="origem"]') || null
+      origem: copyFieldValue(row, '[data-copy-field="origem"]') || null,
+      ativo: row.querySelector('[data-copy-field="ativo"]')?.checked ?? true,
+      status: row.dataset.copyStatus || 'disponivel'
     }));
   }
 
@@ -191,12 +195,19 @@
       const copyNumber = Number(copy.numero_exemplar) || index + 1;
       const location = copy.localizacao ?? defaultLocation;
       const origin = copy.origem ?? defaultOrigin;
-      return `<div class="copy-field-row" data-copy-row data-copy-id="${escapeHtml(copy.id || '')}" data-copy-number="${copyNumber}">
-        <div class="copy-field-identity"><strong>Exemplar ${copyNumber}</strong><span>${escapeHtml(copy.codigo || 'Código gerado ao salvar')}</span></div>
-        <label class="app-field"><span>Tombamento</span><input type="text" maxlength="80" value="${escapeHtml(copy.tombamento || '')}" placeholder="Número patrimonial" data-copy-field="tombamento" /></label>
+      const isExisting = Boolean(copy.id);
+      const isActive = copy.ativo !== false;
+      const canChangeActive = !isExisting || !copy.status || copy.status === 'disponivel';
+      const pendingLabel = isExisting && !copy.tombamento
+        ? '<small class="tombamento-pending">Tombamento pendente</small>'
+        : '';
+      return `<div class="copy-field-row" data-copy-row data-copy-id="${escapeHtml(copy.id || '')}" data-copy-code="${escapeHtml(copy.codigo || '')}" data-copy-number="${copyNumber}" data-copy-status="${escapeHtml(copy.status || 'disponivel')}">
+        <div class="copy-field-identity"><strong>Exemplar ${copyNumber}</strong><span>${escapeHtml(copy.codigo || 'Código gerado ao salvar')}</span>${pendingLabel}</div>
+        <label class="app-field"><span>Tombamento${isExisting ? '' : ' *'}</span><input type="text" maxlength="80" value="${escapeHtml(copy.tombamento || '')}" placeholder="Número patrimonial" data-copy-field="tombamento" ${isExisting ? '' : 'required'} /></label>
         <label class="app-field"><span>Localização</span><input type="text" maxlength="80" value="${escapeHtml(location || '')}" placeholder="Ex.: 6V" data-copy-field="localizacao" /></label>
         <label class="app-field copy-field-conservation"><span>Conservação</span><select data-copy-field="conservacao">${options(conservationOptions, copy.conservacao || 'bom')}</select></label>
         <label class="app-field copy-field-origin"><span>Origem</span><select data-copy-field="origem">${options(originOptions, origin || '')}</select></label>
+        <label class="copy-active-control ${canChangeActive ? '' : 'is-locked'}"><input type="checkbox" data-copy-field="ativo" ${isActive ? 'checked' : ''} ${canChangeActive ? '' : 'disabled'} /><span>${isActive ? 'Ativo no acervo' : 'Exemplar desativado'}</span>${canChangeActive ? '' : '<small>Não pode ser desativado durante reserva ou empréstimo.</small>'}</label>
       </div>`;
     }).join('');
   }
@@ -865,6 +876,17 @@
     bookFormFeedback.classList.toggle('success', success);
   }
 
+  function bookSaveErrorMessage(error, fallback) {
+    const message = String(error?.message || '');
+    const normalized = message.toLowerCase();
+    if (normalized.includes('tombamento_obrigatorio')) return 'Informe o tombamento de todos os novos exemplares.';
+    if (message.includes('exemplares_tombamento_unico') || normalized.includes('duplicate') && normalized.includes('tombamento')) {
+      return 'Este tombamento já pertence a outro exemplar.';
+    }
+    if (message.includes('duplicate key')) return 'Este ISBN já pertence a outro título.';
+    return message || fallback;
+  }
+
   function setBookFormMode(mode, book = null) {
     const isEditing = mode === 'edit' && book;
     editingBookId = isEditing ? book.id : null;
@@ -876,6 +898,7 @@
       ? 'Altere os dados bibliográficos, a classificação, a capa ou a identificação dos exemplares.'
       : 'Preencha o que estiver disponível. As informações que faltarem poderão ser completadas depois.';
     saveBookButton.querySelector('span').textContent = isEditing ? 'Salvar alterações' : 'Salvar no acervo';
+    if (addCopyButton) addCopyButton.hidden = !isEditing;
 
     document.querySelectorAll('[data-create-only]').forEach((field) => {
       field.hidden = Boolean(isEditing);
@@ -885,7 +908,7 @@
     if (!isEditing) {
       editingCopies = [];
       renderCopyFields(Number(quantityField?.value) || 1);
-      if (copyFieldsHelp) copyFieldsHelp.textContent = 'O tombamento pode ficar em branco agora e ser preenchido posteriormente na edição do título.';
+      if (copyFieldsHelp) copyFieldsHelp.textContent = 'O tombamento é obrigatório e deve ser diferente em cada exemplar.';
     }
 
     if (editCoverPreview) {
@@ -969,16 +992,14 @@
     if (client) {
       let { data: copies, error } = await client
         .from('exemplares')
-        .select('id,codigo,numero_exemplar,tombamento,conservacao,localizacao,origem,status')
+        .select('id,codigo,numero_exemplar,tombamento,conservacao,localizacao,origem,status,ativo')
         .eq('livro_id', book.id)
-        .eq('ativo', true)
         .order('numero_exemplar', { ascending: true });
       if (error && String(error.message || '').includes('tombamento')) {
         const fallback = await client
           .from('exemplares')
-          .select('id,codigo,numero_exemplar,conservacao,localizacao,origem,status')
+          .select('id,codigo,numero_exemplar,conservacao,localizacao,origem,status,ativo')
           .eq('livro_id', book.id)
-          .eq('ativo', true)
           .order('numero_exemplar', { ascending: true });
         copies = fallback.data;
         error = fallback.error;
@@ -994,7 +1015,7 @@
         }
         renderCopyFields(editingCopies.length || 1, editingCopies);
         if (copyFieldsHelp) copyFieldsHelp.textContent = editingCopies.length
-          ? 'As alterações de tombamento, localização, conservação e origem serão aplicadas a cada exemplar.'
+          ? 'Complete os tombamentos pendentes quando possível. Todo exemplar novo precisa de tombamento antes de ser salvo.'
           : 'Este título ainda não possui exemplar físico cadastrado.';
       }
     }
@@ -1071,12 +1092,20 @@
     const isbn = String(formData.get('isbn') || '').replace(/[^0-9Xx]/g, '').toUpperCase();
     const publicationYear = Number(formData.get('ano_publicacao')) || null;
     const coverFile = formData.get('capa');
-    const copies = copyRowsPayload().filter((copy) => copy.id);
+    const copies = copyRowsPayload();
+    const existingCopies = copies.filter((copy) => copy.id);
+    const newCopies = copies.filter((copy) => !copy.id);
     const tombamentos = copies.map((copy) => copy.tombamento).filter(Boolean);
 
     if (!title || !author) {
       setBookFormFeedback('Preencha o título e o autor.');
       (!title ? bookForm.elements.namedItem('titulo') : bookForm.elements.namedItem('autor'))?.focus();
+      return;
+    }
+    const newCopyWithoutTombamento = newCopies.find((copy) => !copy.tombamento);
+    if (newCopyWithoutTombamento) {
+      setBookFormFeedback(`Informe o tombamento do exemplar ${newCopyWithoutTombamento.numero_exemplar}.`);
+      copyFieldsList?.querySelector(`[data-copy-number="${newCopyWithoutTombamento.numero_exemplar}"] [data-copy-field="tombamento"]`)?.focus();
       return;
     }
     if (new Set(tombamentos.map((item) => normalizeSearch(item))).size !== tombamentos.length) {
@@ -1117,17 +1146,35 @@
         .eq('id', book.id);
       if (error) throw error;
 
-      for (const copy of copies) {
+      for (const copy of existingCopies) {
         const { error: copyError } = await client
           .from('exemplares')
           .update({
             tombamento: copy.tombamento,
             localizacao: copy.localizacao,
             conservacao: copy.conservacao,
-            origem: copy.origem
+            origem: copy.origem,
+            ativo: copy.ativo
           })
           .eq('id', copy.id);
         if (copyError) throw copyError;
+      }
+
+      if (newCopies.length) {
+        const codePrefix = book.id.replace(/-/g, '').slice(0, 8).toUpperCase();
+        const rows = newCopies.map((copy) => ({
+          livro_id: book.id,
+          codigo: `BIB-${codePrefix}-${String(copy.numero_exemplar).padStart(3, '0')}`,
+          numero_exemplar: copy.numero_exemplar,
+          tombamento: copy.tombamento,
+          conservacao: copy.conservacao || 'bom',
+          localizacao: copy.localizacao,
+          origem: copy.origem,
+          ativo: copy.ativo,
+          criado_por: activeProfile.id
+        }));
+        const { error: insertError } = await client.from('exemplares').insert(rows);
+        if (insertError) throw insertError;
       }
 
       if (uploadedCover.url && editingCoverUrl) {
@@ -1143,17 +1190,14 @@
       setBookFormMode('create');
       await connectDashboard();
       setBookFormFeedback();
-      showToast('Informações do título atualizadas.');
+      showToast(newCopies.length
+        ? `Título atualizado e ${newCopies.length} exemplar${newCopies.length === 1 ? '' : 'es'} adicionado${newCopies.length === 1 ? '' : 's'}.`
+        : 'Informações do título atualizadas.');
       scrollToContent();
     } catch (error) {
       if (uploadedCover.path) await client.storage.from('capas-livros').remove([uploadedCover.path]);
       console.error('Falha ao editar título:', error);
-      const message = String(error?.message || '');
-      setBookFormFeedback(message.includes('exemplares_tombamento_unico') || message.toLowerCase().includes('tombamento')
-        ? 'Este tombamento já pertence a outro exemplar.'
-        : (message.includes('duplicate key')
-          ? 'Este ISBN já pertence a outro título.'
-          : (message || 'Não foi possível atualizar o título. Tente novamente.')));
+      setBookFormFeedback(bookSaveErrorMessage(error, 'Não foi possível atualizar o título. Tente novamente.'));
     } finally {
       saveBookButton.disabled = false;
       saveBookButton.querySelector('span').textContent = editingBookId ? 'Salvar alterações' : 'Salvar no acervo';
@@ -1198,6 +1242,12 @@
     if (copyDetails.length !== quantity) {
       renderCopyFields(quantity);
       setBookFormFeedback('Confira os dados dos exemplares antes de salvar.');
+      return;
+    }
+    const copyWithoutTombamento = copyDetails.find((copy) => !copy.tombamento);
+    if (copyWithoutTombamento) {
+      setBookFormFeedback(`Informe o tombamento do exemplar ${copyWithoutTombamento.numero_exemplar}.`);
+      copyFieldsList?.querySelector(`[data-copy-number="${copyWithoutTombamento.numero_exemplar}"] [data-copy-field="tombamento"]`)?.focus();
       return;
     }
     if (new Set(tombamentos.map((item) => normalizeSearch(item))).size !== tombamentos.length) {
@@ -1309,12 +1359,7 @@
       if (updatedExistingCoverId) await client.from('livros').update({ capa_url: null }).eq('id', updatedExistingCoverId);
       if (uploadedCover.path) await client.storage.from('capas-livros').remove([uploadedCover.path]);
       console.error('Falha ao cadastrar livro:', error);
-      const message = String(error?.message || '');
-      setBookFormFeedback(message.includes('exemplares_tombamento_unico') || message.toLowerCase().includes('tombamento')
-        ? 'Um dos tombamentos já pertence a outro exemplar.'
-        : (message.includes('duplicate key')
-          ? 'Este ISBN já está cadastrado. Atualize o acervo e tente novamente.'
-          : (message || 'Não foi possível salvar o livro. Tente novamente.')));
+      setBookFormFeedback(bookSaveErrorMessage(error, 'Não foi possível salvar o livro. Tente novamente.'));
     } finally {
       saveBookButton.disabled = false;
       saveBookButton.querySelector('span').textContent = 'Salvar no acervo';
@@ -1438,6 +1483,28 @@
     copyFieldsList?.querySelectorAll('[data-copy-field="origem"]').forEach((field) => {
       field.value = originField.value;
     });
+  });
+  addCopyButton?.addEventListener('click', () => {
+    const copies = copyRowsPayload();
+    const nextNumber = copies.reduce((largest, copy) => Math.max(largest, Number(copy.numero_exemplar) || 0), 0) + 1;
+    copies.push({
+      numero_exemplar: nextNumber,
+      tombamento: null,
+      localizacao: String(locationField?.value || '').trim() || null,
+      conservacao: 'bom',
+      origem: String(originField?.value || '').trim() || null,
+      ativo: true,
+      status: 'disponivel'
+    });
+    renderCopyFields(copies.length, copies);
+    setBookFormFeedback(`Exemplar ${nextNumber} adicionado. Informe o tombamento para salvar.`);
+    copyFieldsList?.querySelector(`[data-copy-number="${nextNumber}"] [data-copy-field="tombamento"]`)?.focus();
+  });
+  copyFieldsList?.addEventListener('change', (event) => {
+    const activeField = event.target.closest('[data-copy-field="ativo"]');
+    if (!activeField) return;
+    const label = activeField.closest('.copy-active-control')?.querySelector('span');
+    if (label) label.textContent = activeField.checked ? 'Ativo no acervo' : 'Exemplar desativado';
   });
   classificationColorField?.addEventListener('change', () => {
     const mapped = CLASSIFICATION_COLORS[classificationColorField.value];

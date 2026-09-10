@@ -1,4 +1,4 @@
-# Biblioteca EE 11 de Outubro — versão 0.11.4
+# Biblioteca EE 11 de Outubro — versão 0.11.5
 
 Esta versão usa as artes limpas e inalteradas somente como fundo da tela inicial. Cabeçalho, brasão, textos, cartões e navegação são elementos reais do APP em HTML e CSS.
 
@@ -13,6 +13,8 @@ No celular, o menu superior permanece removido por ser redundante com os cartõe
 - Campos ausentes na planilha podem ser completados posteriormente pela ação **Editar**.
 - A ordem, o código, a localização e as cores da planilha original aparecem como referência nos cartões enquanto esses campos ainda não estiverem preenchidos no banco; alterações salvas pelo formulário têm prioridade.
 - As cores existentes na planilha original são Verde, Amarela, Rosa e Laranja. Títulos sem cor usam indicador e faixa lateral cinza, sem classificação presumida.
+
+Para gravar definitivamente esses metadados nos títulos que já estão no Supabase, execute `importar-metadados-planilha-original.sql` no SQL Editor. O arquivo não cria nem exclui títulos, não altera quantidades e não substitui informações já preenchidas pelo bibliotecário.
 
 MVP online para gestão da biblioteca escolar da EE 11 de Outubro.
 
