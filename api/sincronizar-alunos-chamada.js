@@ -5,12 +5,15 @@ function send(res, status, payload) {
 }
 
 function requiredEnvironment() {
-  const environment = {
+  const rawEnvironment = {
     CHAMADA_SUPABASE_URL: process.env.CHAMADA_SUPABASE_URL,
     CHAMADA_SUPABASE_SERVICE_ROLE_KEY: process.env.CHAMADA_SUPABASE_SERVICE_ROLE_KEY,
     BIBLIOTECA_SUPABASE_URL: process.env.BIBLIOTECA_SUPABASE_URL,
     BIBLIOTECA_SUPABASE_SERVICE_ROLE_KEY: process.env.BIBLIOTECA_SUPABASE_SERVICE_ROLE_KEY
   };
+  const environment = Object.fromEntries(
+    Object.entries(rawEnvironment).map(([key, value]) => [key, String(value || '').trim()])
+  );
   const missing = Object.entries(environment).filter(([, value]) => !value).map(([key]) => key);
   if (missing.length) throw new Error(`Configuração protegida ausente: ${missing.join(', ')}.`);
   return {
@@ -23,11 +26,23 @@ function requiredEnvironment() {
 }
 
 function serviceHeaders(serviceKey) {
-  return {
+  const headers = {
     apikey: serviceKey,
-    Authorization: `Bearer ${serviceKey}`,
     Accept: 'application/json'
   };
+  // As chaves service_role antigas são JWTs. As novas sb_secret_ funcionam
+  // somente no cabeçalho apikey; o Supabase gera internamente um JWT temporário.
+  if (/^eyJ/.test(serviceKey)) headers.Authorization = `Bearer ${serviceKey}`;
+  return headers;
+}
+
+async function runStage(label, action) {
+  try {
+    return await action();
+  } catch (error) {
+    const detail = error?.message || 'falha inesperada';
+    throw new Error(`${label}: ${detail}`);
+  }
 }
 
 async function parseResponse(response, fallback) {
@@ -161,9 +176,18 @@ export default async function handler(req, res) {
 
   try {
     const config = requiredEnvironment();
-    await validateAdministrator(config, token);
-    const payload = await readChamada(config);
-    const result = await writeBiblioteca(config, payload);
+    await runStage(
+      'Falha ao validar o acesso no Supabase da Biblioteca',
+      () => validateAdministrator(config, token)
+    );
+    const payload = await runStage(
+      'Falha ao consultar o Supabase do Chamada Escolar',
+      () => readChamada(config)
+    );
+    const result = await runStage(
+      'Falha ao gravar no Supabase da Biblioteca',
+      () => writeBiblioteca(config, payload)
+    );
     return send(res, 200, { ok: true, ...result });
   } catch (error) {
     console.error('Falha na sincronização do Chamada Escolar:', error);
