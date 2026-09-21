@@ -1,5 +1,5 @@
 -- Biblioteca EE 11 de Outubro — empréstimo administrativo por Código SGDE
--- Execute uma única vez no SQL Editor do Supabase após publicar a versão 0.12.0.
+-- Execute uma única vez no SQL Editor do Supabase da Biblioteca.
 
 begin;
 

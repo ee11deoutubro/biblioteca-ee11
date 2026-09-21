@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#071c4d" />
   <meta name="description" content="Sistema de gestão da Biblioteca da EE 11 de Outubro" />
-  <meta name="app-version" content="0.12.0" />
+  <meta name="app-version" content="0.13.0" />
   <meta property="og:locale" content="pt_BR" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Biblioteca 11 • EE 11 de Outubro" />
@@ -58,7 +58,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/styles.css?v=0.12.0" />
+  <link rel="stylesheet" href="/styles.css?v=0.13.0" />
   <link rel="stylesheet" href="/auth.css?v=0.8.0" />
   <link rel="stylesheet" href="/portal.css?v=0.8.0" />
   <link rel="stylesheet" href="/portal-interactions.css?v=0.8.3" />
@@ -505,6 +505,32 @@
         <section class="requests-list" id="requestsList" aria-live="polite"></section>
         <section class="catalog-empty" id="requestsEmpty" hidden><h2>Nenhuma solicitação encontrada</h2><p>As reservas realizadas no catálogo público aparecerão aqui.</p></section>
       </main>
+
+      <main class="people-view" data-view="Pessoas" tabindex="-1" hidden>
+        <section class="module-heading people-heading">
+          <div><p class="date-label">CADASTROS DA ESCOLA</p><h1>Alunos e professores</h1><p>Os alunos ativos são atualizados diretamente pelo Chamada Escolar.</p></div>
+          <button class="primary-button" id="syncChamadaButton" type="button">
+            <svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 1-2.3-5.7M20 4v7h-7"/></svg><span>Sincronizar agora</span>
+          </button>
+        </section>
+        <section class="sync-panel">
+          <div class="sync-panel-icon"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg></div>
+          <div class="sync-panel-copy"><span>CHAMADA ESCOLAR</span><h2>Cadastros oficiais da escola</h2><p>Nome, Código SGDE, turma e situação do aluno permanecem vinculados à base oficial.</p></div>
+          <div class="sync-status" id="syncStatus"><small>Última sincronização</small><strong>Ainda não realizada</strong></div>
+        </section>
+        <p class="sync-feedback" id="syncFeedback" role="status" aria-live="polite"></p>
+        <section class="people-summary" aria-live="polite">
+          <div><span>Alunos ativos</span><strong id="activeStudentCount">0</strong></div>
+          <div><span>Turmas ativas</span><strong id="activeClassCount">0</strong></div>
+          <div><span>Cadastros inativos</span><strong id="inactiveStudentCount">0</strong></div>
+        </section>
+        <section class="people-toolbar">
+          <label class="catalog-search-field"><span>Buscar aluno</span><span class="collection-search-control"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="peopleSearch" type="search" placeholder="Nome, Código SGDE ou turma" /></span></label>
+          <label class="collection-filter"><span>Situação</span><select id="peopleStatusFilter"><option value="ativos">Ativos</option><option value="inativos">Inativos</option><option value="todos">Todos</option></select></label>
+        </section>
+        <section class="people-list" id="peopleList" aria-live="polite"></section>
+        <section class="catalog-empty" id="peopleEmpty" hidden><h2>Nenhum aluno encontrado</h2><p>Sincronize o Chamada Escolar ou altere os filtros da consulta.</p></section>
+      </main>
     </div>
 
     <nav class="bottom-nav" aria-label="Navegação principal">
@@ -521,8 +547,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="/config.js"></script>
   <script src="/supabase-client.js"></script>
-  <script src="/catalogo-metadata-original.js?v=0.12.0"></script>
+  <script src="/catalogo-metadata-original.js?v=0.13.0"></script>
   <script src="/portal.js?v=0.10.1"></script>
-  <script src="/app.js?v=0.12.0"></script>
+  <script src="/app.js?v=0.13.0"></script>
 </body>
 </html>

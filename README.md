@@ -1,4 +1,4 @@
-# Biblioteca EE 11 de Outubro — versão 0.12.0
+# Biblioteca EE 11 de Outubro — versão 0.13.0
 
 Esta versão usa as artes limpas e inalteradas somente como fundo da tela inicial. Cabeçalho, brasão, textos, cartões e navegação são elementos reais do APP em HTML e CSS.
 
@@ -30,7 +30,7 @@ MVP online para gestão da biblioteca escolar da EE 11 de Outubro.
 
 - Etapa 1 — identidade visual, painel responsivo e estrutura para Vercel: concluída
 - Etapa 2 — Supabase (banco, cliente, Storage e autenticação administrativa): concluída
-- Etapa 3 — integração com alunos e turmas do Chamada Escolar/SGDE: em andamento
+- Etapa 3 — integração com alunos e turmas do Chamada Escolar/SGDE: implementada, aguardando configuração das chaves protegidas
 - Etapa 4 — acervo e controle interno de exemplares: concluída
 - Etapa 5 — reservas online e confirmação de retirada: em andamento
 - Etapa 6 — painel, cobranças e relatórios
@@ -104,6 +104,24 @@ tombamento, a localização, a conservação e a origem de cada exemplar.
 
 Para ativar esse fluxo, publique os arquivos e execute uma única vez no SQL Editor
 do Supabase o arquivo `ativar-emprestimos-diretos.sql`.
+
+## Sincronização com o Chamada Escolar
+
+O painel **Alunos e professores** possui a ação **Sincronizar agora**. Ela importa
+somente turmas oficiais, não utilizadas para teste, e matrículas ativas da EE 11
+de Outubro. O campo `students.registration` do Chamada é gravado como `matricula`
+na Biblioteca e continua sendo o Código SGDE usado nas reservas e nos empréstimos.
+
+A sincronização atualiza nomes e turmas sem duplicar alunos. Cadastros que deixam
+de estar ativos no Chamada são inativados na Biblioteca, mas permanecem no banco e
+no histórico de movimentações.
+
+Antes do primeiro uso:
+
+1. Execute `ativar-sincronizacao-chamada.sql` no Supabase da Biblioteca.
+2. Cadastre na Vercel as quatro variáveis obrigatórias documentadas em `.env.example`.
+   `CHAMADA_SCHOOL_ID` é opcional e só será necessária se a origem possuir mais de uma escola.
+3. Faça uma nova publicação e use **Alunos e professores → Sincronizar agora**.
 
 Antes de publicar esta versão, execute uma única vez no SQL Editor do Supabase o
 arquivo `atualizar-catalogo-classificacao-tombamento.sql`. Ele acrescenta os

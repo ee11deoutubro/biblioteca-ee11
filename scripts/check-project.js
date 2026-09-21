@@ -19,10 +19,12 @@ const requiredFiles = [
   'atualizar-permissoes-gestao.sql',
   'ativar-reservas-online.sql',
   'ativar-emprestimos-diretos.sql',
+  'ativar-sincronizacao-chamada.sql',
   'atualizar-catalogo-classificacao-tombamento.sql',
   'importar-metadados-planilha-original.sql',
   'vercel.json',
   'api/health.js',
+  'api/sincronizar-alunos-chamada.js',
   'assets/logo-escola.png',
   'assets/cabecalho-escola.png',
   'assets/fundo-inicio-desktop.png',
@@ -84,6 +86,11 @@ for (const loanField of ['loanOperationPanel', 'loanStudentCode', 'loanCopySearc
     throw new Error(`Campo do empréstimo administrativo ausente: ${loanField}`);
   }
 }
+for (const peopleField of ['syncChamadaButton', 'syncStatus', 'activeStudentCount', 'activeClassCount', 'peopleList']) {
+  if (!html.includes(`id="${peopleField}"`)) {
+    throw new Error(`Campo da sincronização do Chamada ausente: ${peopleField}`);
+  }
+}
 if (!html.includes('id="publicPortal"') || !html.includes('id="reservationModal"')) {
   throw new Error('O catálogo público ou o fluxo de reserva está incompleto.');
 }
@@ -111,6 +118,11 @@ for (const feature of ['renderCategoryTabs', 'openEditBookForm', 'saveEditedBook
 for (const feature of ['findLoanStudent', 'searchAvailableLoanCopies', 'saveDirectLoan', 'registrar_emprestimo_por_codigo']) {
   if (!appScript.includes(feature)) {
     throw new Error(`Recurso de empréstimo administrativo ausente: ${feature}`);
+  }
+}
+for (const feature of ['loadPeople', 'syncChamada', '/api/sincronizar-alunos-chamada']) {
+  if (!appScript.includes(feature)) {
+    throw new Error(`Integração com o Chamada Escolar ausente: ${feature}`);
   }
 }
 if (!appScript.includes("book?.classificacao_cor || 'Cor não informada'")) {
@@ -185,6 +197,26 @@ const directLoansSql = await readFile(
 for (const feature of ['buscar_exemplares_disponiveis', 'registrar_emprestimo_por_codigo', 'tombamento', "set status = 'emprestado'"]) {
   if (!directLoansSql.includes(feature)) {
     throw new Error(`Regra do empréstimo administrativo ausente: ${feature}`);
+  }
+}
+
+const chamadaSyncSql = await readFile(
+  new URL('../ativar-sincronizacao-chamada.sql', import.meta.url),
+  'utf8'
+);
+for (const feature of ['chamada_class_id', 'chamada_student_id', 'chamada_enrollment_id', 'sincronizar_cadastros_chamada', 'sincronizado_chamada']) {
+  if (!chamadaSyncSql.includes(feature)) {
+    throw new Error(`Estrutura da sincronização do Chamada incompleta: ${feature}`);
+  }
+}
+
+const chamadaSyncApi = await readFile(
+  new URL('../api/sincronizar-alunos-chamada.js', import.meta.url),
+  'utf8'
+);
+for (const feature of ['CHAMADA_SUPABASE_URL', 'CHAMADA_SUPABASE_SERVICE_ROLE_KEY', 'BIBLIOTECA_SUPABASE_SERVICE_ROLE_KEY', 'students!inner', 'sincronizar_cadastros_chamada']) {
+  if (!chamadaSyncApi.includes(feature)) {
+    throw new Error(`API da sincronização do Chamada incompleta: ${feature}`);
   }
 }
 

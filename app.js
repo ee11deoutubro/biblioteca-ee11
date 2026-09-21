@@ -87,6 +87,16 @@
   const loanDueDate = document.getElementById('loanDueDate');
   const saveLoanButton = document.getElementById('saveLoanButton');
   const loanFormFeedback = document.getElementById('loanFormFeedback');
+  const syncChamadaButton = document.getElementById('syncChamadaButton');
+  const syncStatus = document.getElementById('syncStatus');
+  const syncFeedback = document.getElementById('syncFeedback');
+  const activeStudentCount = document.getElementById('activeStudentCount');
+  const activeClassCount = document.getElementById('activeClassCount');
+  const inactiveStudentCount = document.getElementById('inactiveStudentCount');
+  const peopleSearch = document.getElementById('peopleSearch');
+  const peopleStatusFilter = document.getElementById('peopleStatusFilter');
+  const peopleList = document.getElementById('peopleList');
+  const peopleEmpty = document.getElementById('peopleEmpty');
   let toastTimer;
   let releaseTopLock = () => {};
   let activeProfile = null;
@@ -100,6 +110,7 @@
   let selectedBookDetailsId = null;
   let selectedLoanStudent = null;
   let selectedLoanCopy = null;
+  let peopleCache = [];
 
   const CLASSIFICATION_COLORS = Object.freeze({
     Amarela: '#eab308',
@@ -1134,6 +1145,95 @@
     scrollToContent();
   }
 
+  function renderPeople() {
+    if (!peopleList || !peopleEmpty) return;
+    const searchTerm = normalizeSearch(peopleSearch?.value || '');
+    const status = peopleStatusFilter?.value || 'ativos';
+    const filtered = peopleCache.filter((person) => {
+      const matchesStatus = status === 'todos'
+        || (status === 'ativos' && person.ativo)
+        || (status === 'inativos' && !person.ativo);
+      const className = person.turmas?.nome || '';
+      const matchesSearch = !searchTerm || normalizeSearch(`${person.nome} ${person.matricula || ''} ${className}`).includes(searchTerm);
+      return matchesStatus && matchesSearch;
+    });
+
+    peopleEmpty.hidden = filtered.length > 0;
+    peopleList.hidden = filtered.length === 0;
+    peopleList.innerHTML = filtered.map((person) => {
+      const className = person.turmas?.nome || 'Turma não informada';
+      const shift = person.turmas?.turno ? ` • ${person.turmas.turno}` : '';
+      return `<article class="person-card ${person.ativo ? '' : 'inactive'}"><span class="person-avatar">${escapeHtml(String(person.nome || 'A').charAt(0).toUpperCase())}</span><div><strong>${escapeHtml(person.nome)}</strong><small>Código SGDE: ${escapeHtml(person.matricula || 'Não informado')}</small><span>${escapeHtml(className + shift)}</span></div><b class="person-status ${person.ativo ? '' : 'inactive'}">${person.ativo ? 'Ativo' : 'Inativo'}</b></article>`;
+    }).join('');
+  }
+
+  async function loadPeople() {
+    const client = window.bibliotecaSupabase;
+    if (!client || !peopleList) return;
+    peopleList.hidden = false;
+    peopleList.innerHTML = '<div class="people-loading">Carregando os cadastros...</div>';
+    peopleEmpty.hidden = true;
+    try {
+      const [{ data: people, error: peopleError }, { data: classes, error: classesError }] = await Promise.all([
+        client.from('pessoas').select('id,nome,matricula,turma_id,ativo,sincronizado_em,turmas(nome,turno)').eq('tipo', 'aluno').order('nome').range(0, 4999),
+        client.from('turmas').select('id,ativo,sincronizado_em').eq('sincronizado_chamada', true).range(0, 999)
+      ]);
+      if (peopleError) throw peopleError;
+      if (classesError) throw classesError;
+      peopleCache = people || [];
+      const syncedPeople = peopleCache.filter((person) => person.sincronizado_em);
+      const latestSync = [...syncedPeople, ...(classes || [])]
+        .map((item) => item.sincronizado_em)
+        .filter(Boolean)
+        .sort()
+        .at(-1);
+      activeStudentCount.textContent = formatNumber(peopleCache.filter((person) => person.ativo).length);
+      inactiveStudentCount.textContent = formatNumber(peopleCache.filter((person) => !person.ativo).length);
+      activeClassCount.textContent = formatNumber((classes || []).filter((item) => item.ativo).length);
+      if (syncStatus) syncStatus.innerHTML = `<small>Última sincronização</small><strong>${latestSync ? escapeHtml(formatDateTime(latestSync)) : 'Ainda não realizada'}</strong>`;
+      renderPeople();
+    } catch (error) {
+      console.error('Falha ao carregar alunos:', error);
+      peopleCache = [];
+      peopleList.hidden = true;
+      peopleEmpty.hidden = false;
+      peopleEmpty.innerHTML = '<h2>Sincronização ainda não ativada</h2><p>Execute o arquivo ativar-sincronizacao-chamada.sql no Supabase da Biblioteca.</p>';
+    }
+  }
+
+  async function syncChamada() {
+    const client = window.bibliotecaSupabase;
+    if (!client || !syncChamadaButton) return;
+    syncChamadaButton.disabled = true;
+    syncChamadaButton.querySelector('span').textContent = 'Sincronizando...';
+    if (syncFeedback) {
+      syncFeedback.textContent = 'Consultando turmas e alunos ativos no Chamada Escolar...';
+      syncFeedback.classList.remove('error');
+    }
+    try {
+      const { data: { session } } = await client.auth.getSession();
+      if (!session?.access_token) throw new Error('Entre novamente no painel administrativo.');
+      const response = await fetch('/api/sincronizar-alunos-chamada', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}` }
+      });
+      const result = await response.json().catch(() => null);
+      if (!response.ok || !result?.ok) throw new Error(result?.message || 'Não foi possível sincronizar os cadastros.');
+      const message = `${formatNumber(result.alunos_recebidos || 0)} alunos e ${formatNumber(result.turmas_recebidas || 0)} turmas conferidos. ${formatNumber(result.alunos_inseridos || 0)} alunos novos, ${formatNumber(result.alunos_atualizados || 0)} atualizados e ${formatNumber(result.alunos_desativados || 0)} inativados.`;
+      syncFeedback.textContent = message;
+      syncFeedback.classList.remove('error');
+      showToast('Cadastros do Chamada Escolar sincronizados.');
+      await loadPeople();
+    } catch (error) {
+      console.error('Falha ao sincronizar o Chamada Escolar:', error);
+      syncFeedback.textContent = error?.message || 'Não foi possível sincronizar os cadastros.';
+      syncFeedback.classList.add('error');
+    } finally {
+      syncChamadaButton.disabled = false;
+      syncChamadaButton.querySelector('span').textContent = 'Sincronizar agora';
+    }
+  }
+
   function availableView(name) {
     return [...document.querySelectorAll('[data-view]')]
       .find((view) => view.dataset.view === name);
@@ -1171,6 +1271,7 @@
     if (options.scroll !== false) scrollToContent(options.behavior || 'smooth');
     if (selectedName === 'Acervo' && window.bibliotecaSupabase) refreshCompleteCatalog();
     if (selectedName === 'Solicitações' && window.bibliotecaSupabase) loadAdminRequests();
+    if (selectedName === 'Pessoas' && window.bibliotecaSupabase) loadPeople();
     return Boolean(requestedView);
   }
 
@@ -1922,6 +2023,9 @@
   });
   loanForm?.addEventListener('submit', saveDirectLoan);
   closeLoanOperation?.addEventListener('click', closeLoanPanel);
+  syncChamadaButton?.addEventListener('click', syncChamada);
+  peopleSearch?.addEventListener('input', renderPeople);
+  peopleStatusFilter?.addEventListener('change', renderPeople);
   catalogCategories?.addEventListener('click', (event) => {
     const button = event.target.closest('[data-category]');
     if (!button) return;
